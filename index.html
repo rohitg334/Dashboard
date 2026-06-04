@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CAT RTI Dashboard 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--navy:#0d1b2a;--gold:#c9a84c;--blue:#2563a8;--blue2:#1a4a7c;--red:#b03030;--green:#2a6e4a;--green2:#3a8a5a;--brown:#b87333;--cream:#f8f4ee;--light:#e8e2d8;--mid:#6b7280;--text:#111827}
+body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--text);font-size:14px;line-height:1.6}
+.dn{display:none!important}
+.hdr{background:var(--navy);padding:14px 28px 0;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.4)}
+.hdr-top{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:10px}
+.hdr-title{font-family:'Playfair Display',serif;font-size:18px;color:#fff;font-weight:700}
+.hdr-src{font-size:10px;color:var(--gold);margin-top:2px}
+.hdr-pill{text-align:center;padding:4px 10px;background:rgba(255,255,255,.07);border-radius:8px;border:.5px solid rgba(255,255,255,.12)}
+.hdr-pill-v{font-size:13px;font-weight:600;color:var(--gold)}
+.hdr-pill-l{font-size:8px;color:rgba(255,255,255,.35);letter-spacing:1.4px;text-transform:uppercase;margin-top:1px}
+.nav{display:flex;gap:0;border-top:.5px solid rgba(255,255,255,.08)}
+.nb{padding:9px 14px;border:none;background:transparent;cursor:pointer;font-size:12px;font-weight:500;color:rgba(255,255,255,.45);border-bottom:2px solid transparent;font-family:inherit;white-space:nowrap;transition:all .2s;margin-bottom:-1px}
+.nb.on{color:var(--gold);border-bottom-color:var(--gold)}
+.main{max-width:1180px;margin:0 auto;padding:20px 22px}
+.card{background:#fff;border:.5px solid var(--light);border-radius:12px;padding:18px;margin-bottom:14px}
+.card-sm{background:#fff;border:.5px solid var(--light);border-radius:10px;padding:12px}
+.stat-grid{display:grid;gap:10px;margin-bottom:16px}
+.stat{background:#fff;border:.5px solid var(--light);border-radius:10px;padding:12px 14px;border-top:3px solid var(--gold)}
+.stat.dk{background:var(--navy);border-top-color:var(--gold)}
+.stat.dk .sl{color:rgba(255,255,255,.4)}.stat.dk .sv{color:#fff}.stat.dk .sn{color:rgba(255,255,255,.3)}
+.sl{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mid);margin-bottom:4px;font-weight:600}
+.sv{font-size:24px;font-weight:600;color:var(--navy);line-height:1;margin-bottom:2px}
+.sn{font-size:11px;color:var(--mid)}
+.sbwrap{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.sb{padding:5px 12px;border:.5px solid var(--light);background:var(--cream);cursor:pointer;border-radius:20px;font-size:12px;font-weight:500;color:var(--mid);font-family:inherit;transition:all .15s}
+.sb.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px}
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{background:var(--navy);color:#fff;padding:7px 10px;text-align:left;font-size:11px;font-weight:600;letter-spacing:.4px}
+.tbl th.r,.tbl td.r{text-align:right}.tbl td{padding:6px 10px;border-bottom:.5px solid var(--light)}
+.tbl tr:nth-child(even) td{background:#faf8f5}.tbl tr:hover td{background:#f0ede8}
+.ch{position:relative;width:100%}
+.pb-ctrl{display:flex;align-items:center;gap:8px;padding:8px 11px;background:#f0f4ff;border:.5px solid #c7d7f0;border-radius:9px;margin-bottom:12px}
+.pb-btn{display:flex;align-items:center;gap:5px;padding:6px 13px;border:none;border-radius:18px;cursor:pointer;font-size:11px;font-weight:600;font-family:inherit;min-width:88px;justify-content:center;transition:background .2s}
+.pb-idle{background:var(--navy);color:#fff}.pb-playing{background:#b03030;color:#fff}.pb-done{background:#2a6e4a;color:#fff}
+.pb-bar-wrap{flex:1;height:5px;background:#d1ddf0;border-radius:3px;overflow:hidden}
+.pb-bar-fill{height:100%;background:var(--blue);width:0%;border-radius:3px;transition:width .3s}
+.pb-step{font-size:11px;color:var(--mid);white-space:nowrap;min-width:58px;text-align:right}
+.pb-spd{font-size:11px;padding:4px 7px;border-radius:6px;border:.5px solid var(--light);background:#fff;cursor:pointer;font-family:inherit}
+.pb-lbl{font-size:11px;color:#4466aa;font-weight:500;white-space:nowrap}
+.vac-row{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#fff;border:.5px solid var(--light);border-radius:8px;margin-bottom:7px}
+.vac-lbl{width:180px;font-size:12px;color:var(--mid);flex-shrink:0}
+.vac-track{flex:1;height:13px;background:var(--light);border-radius:3px;overflow:hidden;display:flex}
+.vac-f{background:var(--blue);height:100%}.vac-v{background:#b03030;height:100%;opacity:.75}
+.vac-num{font-size:11px;color:var(--mid);white-space:nowrap}
+.alrt{border-left:3px solid #b03030;background:#fff5f5;padding:9px 12px;border-radius:0 8px 8px 0;font-size:12px;margin-bottom:12px}
+.note{border-left:3px solid var(--gold);background:#fffbf0;padding:9px 12px;border-radius:0 8px 8px 0;font-size:12px;margin-bottom:12px}
+.trend-box{background:var(--cream);border:.5px solid var(--light);border-left:3px solid var(--blue);border-radius:0 8px 8px 0;padding:12px 16px;margin-top:12px;font-size:12px;line-height:1.75;color:var(--text)}
+.trend-box strong{color:var(--navy)}
+.tp{display:inline-block;padding:1px 7px;border-radius:10px;font-size:11px;font-weight:600;margin:1px 2px}
+.tp-r{background:#fff0f0;color:#b03030}.tp-g{background:#f0fff4;color:#2a6e4a}.tp-o{background:#fffbf0;color:#a07020}
+.kt-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:12px}
+.kt-item{background:#fff;border:.5px solid var(--light);border-top:3px solid var(--gold);border-radius:10px;padding:14px}
+.kt-num{font-family:'Playfair Display',serif;font-size:24px;color:var(--gold);font-weight:700;line-height:1;margin-bottom:5px}
+.kt-title{font-weight:600;font-size:12px;color:var(--navy);margin-bottom:3px}
+.kt-body{font-size:11px;color:var(--mid);line-height:1.55}
+.bh{background:var(--navy);border-radius:10px;padding:13px 17px;margin-bottom:12px}
+.pbar-wrap{margin-bottom:9px}
+.pbar-track{height:7px;background:var(--light);border-radius:4px;overflow:hidden;margin-top:3px}
+.pbar-fill{height:100%;border-radius:4px}
+.info-card{background:var(--cream);border:.5px solid var(--light);border-radius:10px;padding:12px;text-align:center}
+select{background:#fff;border:.5px solid var(--light);border-radius:7px;padding:6px 10px;font-size:12px;font-family:inherit;color:var(--text);cursor:pointer}
+.leg{display:flex;gap:10px;flex-wrap:wrap;font-size:11px;color:var(--mid);margin-bottom:9px}
+.ld{width:9px;height:9px;border-radius:2px;display:inline-block;vertical-align:middle;margin-right:3px}
+.yr-range-bar{display:flex;align-items:center;gap:9px;padding:9px 13px;background:#f0f4ff;border:.5px solid #c7d7f0;border-radius:9px;margin-bottom:14px;flex-wrap:wrap}
+.yr-range-bar label{font-size:12px;color:var(--mid);white-space:nowrap}
+.sort-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.sort-bar label{font-size:12px;color:var(--mid);white-space:nowrap}
+.edit-drawer{position:fixed;top:0;right:-720px;width:700px;max-width:100vw;height:100vh;background:#fff;box-shadow:-4px 0 24px rgba(0,0,0,.18);z-index:9999;transition:right .35s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column}
+.edit-drawer.open{right:0}
+.edit-hdr{background:var(--navy);padding:13px 17px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.edit-hdr-title{font-size:15px;font-weight:600;color:#fff;font-family:'Playfair Display',serif}
+.edit-close{background:rgba(255,255,255,.12);border:none;color:#fff;cursor:pointer;font-size:16px;padding:5px 11px;border-radius:6px}
+.edit-tabs{display:flex;gap:0;padding:0 12px;background:#f8f4ee;border-bottom:.5px solid var(--light);flex-shrink:0;overflow-x:auto}
+.edit-tab{padding:8px 11px;border:none;background:transparent;cursor:pointer;font-size:11px;font-weight:500;color:var(--mid);border-bottom:2px solid transparent;font-family:inherit;white-space:nowrap}
+.edit-tab.on{color:var(--navy);border-bottom-color:var(--gold);font-weight:600}
+.edit-body{flex:1;overflow-y:auto;padding:13px}
+.edit-section{margin-bottom:16px}
+.edit-section-title{font-size:12px;font-weight:600;color:var(--navy);margin-bottom:8px;padding-bottom:5px;border-bottom:.5px solid var(--light)}
+.edit-tbl{width:100%;border-collapse:collapse;font-size:11px}
+.edit-tbl th{background:var(--navy);color:#fff;padding:5px 7px;text-align:left;font-size:10px;font-weight:600}
+.edit-tbl td{padding:2px 3px;border-bottom:.5px solid #f0ede8}
+.edit-tbl td input{width:100%;padding:3px 5px;border:.5px solid var(--light);border-radius:4px;font-size:11px;font-family:inherit;background:#fafafa}
+.edit-tbl td input:focus{outline:none;border-color:var(--blue);background:#fff}
+.edit-actions{display:flex;gap:7px;margin-top:9px;flex-wrap:wrap}
+.btn{padding:6px 13px;border:none;border-radius:7px;cursor:pointer;font-size:11px;font-weight:600;font-family:inherit;transition:opacity .15s}
+.btn:hover{opacity:.85}
+.btn-navy{background:var(--navy);color:#fff}.btn-gold{background:var(--gold);color:#fff}.btn-red{background:var(--red);color:#fff}.btn-sm{padding:4px 9px;font-size:10px}
+.saved-badge{display:inline-block;padding:3px 8px;background:#d1fae5;color:#065f46;border-radius:12px;font-size:10px;font-weight:600;opacity:0;transition:opacity .3s}
+.saved-badge.show{opacity:1}
+.edit-open-btn{background:var(--gold);border:none;color:#fff;cursor:pointer;font-size:11px;font-weight:600;padding:5px 12px;border-radius:6px;font-family:inherit;white-space:nowrap}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:9998;opacity:0;pointer-events:none;transition:opacity .3s}
+.overlay.show{opacity:1;pointer-events:all}
+@media(max-width:720px){.row2,.row3{grid-template-columns:1fr}.main{padding:12px}.nb{padding:7px 9px;font-size:11px}.edit-drawer{width:100vw}}
+</style>
+</head>
+<body>
+<div id="overlay" class="overlay" onclick="closeEdit()"></div>
+<div id="edit-drawer" class="edit-drawer">
+  <div class="edit-hdr">
+    <div class="edit-hdr-title">Edit / Insert Data</div>
+    <div style="display:flex;align-items:center;gap:9px">
+      <span id="saved-badge" class="saved-badge">Saved!</span>
+      <button class="edit-close" onclick="closeEdit()">&#10005;</button>
+    </div>
+  </div>
+  <div class="edit-tabs">
+    <button class="edit-tab on" data-etab="appt" onclick="switchET('appt',this)">Appointments</button>
+    <button class="edit-tab" data-etab="cfh" onclick="switchET('cfh',this)">Case Flow</button>
+    <button class="edit-tab" data-etab="wpy" onclick="switchET('wpy',this)">WP Yearly</button>
+    <button class="edit-tab" data-etab="wbench" onclick="switchET('wbench',this)">WP Bench-wise</button>
+    <button class="edit-tab" data-etab="cont" onclick="switchET('cont',this)">Contempt (PB)</button>
+    <button class="edit-tab" data-etab="ctall" onclick="switchET('ctall',this)">Contempt (All)</button>
+    <button class="edit-tab" data-etab="aging" onclick="switchET('aging',this)">Case Aging</button>
+    <button class="edit-tab" data-etab="bench" onclick="switchET('bench',this)">Bench Dec-2025</button>
+    <button class="edit-tab" data-etab="memb" onclick="switchET('memb',this)">Membership</button>
+  </div>
+  <div class="edit-body">
+    <div id="etab-appt"></div><div id="etab-cfh" class="dn"></div>
+    <div id="etab-wpy" class="dn"></div><div id="etab-wbench" class="dn"></div>
+    <div id="etab-cont" class="dn"></div><div id="etab-ctall" class="dn"></div>
+    <div id="etab-aging" class="dn"></div><div id="etab-bench" class="dn"></div>
+    <div id="etab-memb" class="dn"></div>
+  </div>
+</div>
+<div class="hdr">
+  <div class="hdr-top">
+    <div>
+      <div style="font-size:9px;letter-spacing:2px;color:rgba(255,255,255,.3);text-transform:uppercase;margin-bottom:2px">Institutional Data Dashboard</div>
+      <div class="hdr-title">Central Administrative Tribunal &mdash; RTI Data Analysis</div>
+      <div class="hdr-src">Source: RTI Application No. CADMT/R/E/26/00082 &nbsp;&bull;&nbsp; File No. CAT-PB021/46/2026-JA-PB &nbsp;&bull;&nbsp; 19 Benches</div>
+    </div>
+    <div style="display:flex;gap:7px;flex-wrap:wrap;align-items:flex-start">
+      <div class="hdr-pill"><div class="hdr-pill-v" id="hdr-pend">69,734</div><div class="hdr-pill-l">Pending Cases</div></div>
+      <div class="hdr-pill"><div class="hdr-pill-v" id="hdr-vac">3</div><div class="hdr-pill-l">Vacancies</div></div>
+      <div class="hdr-pill"><div class="hdr-pill-v">19</div><div class="hdr-pill-l">Benches</div></div>
+      <button class="edit-open-btn" onclick="openEdit()">&#9998; Edit Data</button>
+    </div>
+  </div>
+  <nav class="nav">
+    <button class="nb on" data-tab="overview" onclick="switchTab('overview')">Overview</button>
+    <button class="nb" data-tab="ts" onclick="switchTab('ts')">Time Series</button>
+    <button class="nb" data-tab="city" onclick="switchTab('city')">City Explorer</button>
+    <button class="nb" data-tab="legal" onclick="switchTab('legal')">Legal Data</button>
+    <button class="nb" data-tab="takeaways" onclick="switchTab('takeaways')">Key Takeaways</button>
+  </nav>
+</div>
+<div class="main">
+<div id="tab-overview">
+  <div class="stat-grid" style="grid-template-columns:repeat(auto-fit,minmax(135px,1fr))">
+    <div class="stat dk"><div class="sl">Sanctioned members</div><div class="sv">69</div><div class="sn">+1 Chairman (filled)</div></div>
+    <div class="stat" style="border-top-color:#b03030"><div class="sl">Vacancies</div><div class="sv" id="ov-vac" style="color:#b03030">3</div><div class="sn">2 Judicial &bull; 1 Admin.</div></div>
+    <div class="stat" style="border-top-color:var(--blue)"><div class="sl">Total for disposal</div><div class="sv" id="ov-total">72,516</div><div class="sn">All 19 benches</div></div>
+    <div class="stat" style="border-top-color:var(--green2)"><div class="sl">Disposed (latest)</div><div class="sv" id="ov-disp" style="color:var(--green2)">2,782</div><div class="sn" id="ov-cr">3.8% clearance</div></div>
+    <div class="stat" style="border-top-color:#b03030"><div class="sl">Closing pendency</div><div class="sv" id="ov-pend" style="color:#b03030">69,734</div><div class="sn" id="ov-pendlbl">Dec 2025</div></div>
+    <div class="stat" style="border-top-color:var(--brown)"><div class="sl">WPs filed (since 1998)</div><div class="sv" id="ov-wp">59,409</div><div class="sn" id="ov-wpdec">as of Dec 2024</div></div>
+  </div>
+  <div class="row2">
+    <div class="card">
+      <div style="font-size:13px;font-weight:600;color:var(--navy);margin-bottom:2px">Member appointments (2016&ndash;2025)</div>
+      <div style="font-size:11px;color:var(--mid);margin-bottom:9px">RTI Reply, Point No. 10</div>
+      <div class="leg"><span><span class="ld" style="background:#1a4a7c"></span>Judicial</span><span><span class="ld" style="background:var(--gold)"></span>Administrative</span></div>
+      <div class="ch" style="height:190px"><canvas id="ov-appt"></canvas></div>
+    </div>
+    <div class="card">
+      <div style="font-size:13px;font-weight:600;color:var(--navy);margin-bottom:2px">Closing pendency (all years)</div>
+      <div style="font-size:11px;color:var(--mid);margin-bottom:9px">Peak in Dec 2022; declining since then</div>
+      <div class="ch" style="height:210px"><canvas id="ov-pend-c"></canvas></div>
+    </div>
+  </div>
+  <div class="row3">
+    <div class="card-sm"><div class="sl">Avg tenure &mdash; Admin. Members</div><div class="sv" style="color:var(--green2)">3y 8m</div><div class="sn">73% of 5-year statutory term</div></div>
+    <div class="card-sm"><div class="sl">Avg tenure &mdash; Judicial Members</div><div class="sv" style="color:var(--blue)">2y 11m</div><div class="sn">58% of 5-year statutory term</div></div>
+    <div class="card-sm"><div class="sl">Members served &lt; 2 years</div><div class="sv" style="color:var(--brown)">6</div><div class="sn">Since 2015 to March 2026</div></div>
+  </div>
+  <div class="card">
+    <div style="font-size:13px;font-weight:600;color:var(--navy);margin-bottom:10px">Membership fill rate &mdash; 23 March 2026</div>
+    <div class="vac-row"><div class="vac-lbl">Administrative Members</div><div class="vac-track"><div class="vac-f" style="width:97.1%"></div><div class="vac-v" style="width:2.9%"></div></div><div class="vac-num">34 filled &bull; <span style="color:#b03030">1 vacant</span> / 35</div></div>
+    <div class="vac-row"><div class="vac-lbl">Judicial Members</div><div class="vac-track"><div class="vac-f" style="width:94.1%"></div><div class="vac-v" style="width:5.9%"></div></div><div class="vac-num">32 filled &bull; <span style="color:#b03030">2 vacant</span> / 34</div></div>
+    <div class="alrt" style="margin-top:9px;margin-bottom:0">&#9888; Hyderabad AM vacant since <strong>15 Sep 2023</strong> &bull; Srinagar AM since <strong>30 Oct 2025</strong> &bull; Jammu JM since <strong>23 Mar 2026</strong></div>
+  </div>
+</div>
+<div id="tab-ts" class="dn">
+  <div class="yr-range-bar">
+    <label>Year range:</label>
+    <select id="gyr-f" onchange="applyGYR()"><option value="0">Dec 2016</option><option value="1">Dec 2017</option><option value="2">Dec 2018</option><option value="3">Dec 2019</option><option value="4">Dec 2020</option><option value="5">Dec 2021</option><option value="6">Dec 2022</option><option value="7">Dec 2023</option><option value="8">Dec 2024</option></select>
+    <label>to</label>
+    <select id="gyr-t" onchange="applyGYR()"><option value="1">Dec 2017</option><option value="2">Dec 2018</option><option value="3">Dec 2019</option><option value="4">Dec 2020</option><option value="5">Dec 2021</option><option value="6">Dec 2022</option><option value="7">Dec 2023</option><option value="8">Dec 2024</option><option value="9" selected>Dec 2025</option></select>
+    <span id="gyr-info" style="font-size:12px;color:var(--mid)">All 10 years</span>
+    <button class="btn btn-navy btn-sm" onclick="resetGYR()">Reset</button>
+  </div>
+  <div class="sbwrap">
+    <button class="sb on" data-ts="appt" onclick="switchTs('appt',this)">Appointments</button>
+    <button class="sb" data-ts="pend" onclick="switchTs('pend',this)">Pendency Trend</button>
+    <button class="sb" data-ts="cfh" onclick="switchTs('cfh',this)">Case Flow History</button>
+    <button class="sb" data-ts="wp" onclick="switchTs('wp',this)">WP Filings</button>
+    <button class="sb" data-ts="cont" onclick="switchTs('cont',this)">Contempt Petitions</button>
+  </div>
+  <div id="ts-appt" class="card">
+    <div style="font-size:13px;font-weight:600;color:var(--navy);margin-bottom:2px">Annual member appointments</div>
+    <div style="font-size:11px;color:var(--mid);margin-bottom:10px">RTI Reply Point No. 10. Year range set above.</div>
+    <div class="leg"><span><span class="ld" style="background:#1a4a7c"></span>Judicial</span><span><span class="ld" style="background:var(--gold)"></span>Administrative</span></div>
+    <div class="pb-ctrl"><span class="pb-lbl">&#9654; Animate</span><button id="pb-appt-btn" class="pb-btn pb-idle" onclick="togglePlay('appt')">&#9654; Play</button><div class="pb-bar-wrap"><div id="pb-appt-fill" class="pb-bar-fill"></div></div><span id="pb-appt-step" class="pb-step">-/-</span><select id="pb-appt-spd" class="pb-spd"><option value="1200">Slow</option><option value="750" selected>Normal</option><option value="380">Fast</option></select></div>
+    <div class="ch" style="height:280px"><canvas id="ts-appt-c"></canvas></div>
+    <div id="ts-appt-grid" style="display:grid;gap:7px;margin-top:12px"></div>
+  </div>
+  <div id="ts-pend" class="card dn">
+    <div style="font-size:13px;font-weight:600;color:var(--navy);margin-bottom:2px">Total case pendency &mdash; December closing balance</div>
+    <div style="font-size:11px;color:var(--mid);margin-bottom:10px">Green bar = decrease; Red = increase. % change on each bar.</div>
+    <div class="pb-ctrl"><span class="pb-lbl">&#9654; Animate</span><button id="pb-pend-btn" class="pb-btn pb-idle" onclick="togglePlay('pend')">&#9654; Play</button><div class="pb-bar-wrap"><div id="pb-pend-fill" class="pb-bar-fill"></div></div><span id="pb-pend-step" class="pb-step">-/-</span><select id="pb-pend-spd" class="pb-spd"><option value="1200">Slow</option><option value="750" selected>Normal</option><option value="380">Fast</option></select></div>
+    <div class="ch" style="height:340px"><canvas id="ts-pend-c"></canvas></div>
+    <div id="ts-pend-grid" style="display:grid;gap:5px;margin-top:12px"></div>
+  </div>
+  <div id="ts-cfh" class="card dn">
+    <div style="font-size:13px;font-weight:600;color:var(--navy);margin-bottom:2px">Case flow history &mdash; all 19 benches combined</div>
+    <div style="font-size:11px;color:var(--mid);margin-bottom:10px">Total for Disposal / Disposed / Closing Pendency for each December.</div>
+    <div class="leg"><span><span class="ld" style="background:#1a4a7c"></span>Total for Disposal</span><span><span class="ld" style="background:var(--green2)"></span>Disposed</span><span><span class="ld" style="background:#b03030"></span>Closing Pendency</span></div>
+    <div class="pb-ctrl"><span class="pb-lbl">&#9654; Animate</span><button id="pb-cfh-btn" class="pb-btn pb-idle" onclick="togglePlay('cfh')">&#9654; Play</button><div class="pb-bar-wrap"><div id="pb-cfh-fill" class="pb-bar-fill"></div></div><span id="pb-cfh-step" class="pb-step">-/-</span><select id="pb-cfh-spd" class="pb-spd"><option value="1200">Slow</option><option value="750" selected>Normal</option><option value="380">Fast</option></select></div>
+    <div class="ch" style="height:360px"><canvas id="ts-cfh-c"></canvas></div>
+    <div id="cfh-trend" class="trend-box"></div>
+  </div>
+  <div id="ts-wp" class="card dn">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:9px;margin-bottom:10px">
+      <div style="font-size:13px;font-weight:600;color:var(--navy)">Writ Petitions &amp; SLPs &mdash; cumulative since 1998</div>
+      <select id="wp-yr-sel" onchange="updateWpChart()" style="padding:5px 9px;font-weight:500"><option value="0">Dec 2020</option><option value="1">Dec 2021</option><option value="2">Dec 2022</option><option value="3">Dec 2023</option><option value="4" selected>Dec 2024</option></select>
+    </div>
+    <div class="row2">
+      <div><div style="font-size:12px;font-weight:600;color:var(--navy);margin-bottom:9px">Five WP metrics</div><div class="ch" style="height:280px"><canvas id="ts-wp-c"></canvas></div></div>
+      <div><div style="font-size:12px;font-weight:600;color:var(--navy);margin-bottom:6px">Outcome distribution (decided WPs)</div>
+        <div class="leg"><span><span class="ld" style="background:var(--green2)"></span>Upheld</span><span><span class="ld" style="background:#b03030"></span>Reversed</span><span><span class="ld" style="background:var(--gold)"></span>Partly</span></div>
+        <div class="ch" style="height:255px"><canvas id="ts-wp-pie"></canvas></div></div>
+    </div>
+    <div id="wp-stat-cards" style="display:grid;gap:9px;margin-top:10px"></div>
+    <div class="card" style="margin-top:10px;padding:14px;margin-bottom:0">
+      <div style="font-size:12px;font-weight:600;color:var(--navy);margin-bottom:9px">Year-by-year comparison &mdash; all 5 WP metrics</div>
+      <div class="leg"><span><span class="ld" style="background:#0d1b2a"></span>Filed</span><span><span class="ld" style="background:var(--blue)"></span>Decided</span><span><span class="ld" style="background:var(--green2)"></span>Upheld</span><span><span class="ld" style="background:#b03030"></span>Reversed</span><span><span class="ld" style="background:var(--gold)"></span>Partly</span></div>
+      <div class="ch" style="height:250px"><canvas id="ts-wp-all"></canvas></div>
+    </div>
+  </div>
+  <div id="ts-cont" class="card dn">
+    <div style="font-size:13px;font-weight:600;color:var(--navy);margin-bottom:2px">Contempt petitions &mdash; CAT Principal Bench, 2021&ndash;2025</div>
+    <div style="font-size:11px;color:var(--mid);margin-bottom:9px">Institution grew 3x from 366 (2021) to 1,091 (2025). Page 22 of RTI enclosure.</div>
+    <div class="leg"><span><span class="ld" style="background:var(--blue)"></span>Instituted</span><span><span class="ld" style="background:var(--green2)"></span>Disposed</span><span><span class="ld" style="background:#b03030"></span>Pending</span></div>
+    <div class="pb-ctrl"><span class="pb-lbl">&#9654; Animate</span><button id="pb-cont-btn" class="pb-btn pb-idle" onclick="togglePlay('cont')">&#9654; Play</button><div class="pb-bar-wrap"><div id="pb-cont-fill" class="pb-bar-fill"></div></div><span id="pb-cont-step" class="pb-step">-/-</span><select id="pb-cont-spd" class="pb-spd"><option value="1200">Slow</option><option value="750" selected>Normal</option><option value="380">Fast</option></select></div>
+    <div class="ch" style="height:320px"><canvas id="ts-cont-c"></canvas></div>
+  </div>
+</div>
+<div id="tab-city" class="dn">
+  <div class="card" style="padding:11px;margin-bottom:11px">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <label style="font-size:13px;font-weight:600;color:var(--navy);white-space:nowrap">Select bench:</label>
+      <select id="bench-sel" onchange="updateBench()" style="flex:1;min-width:220px;font-weight:500">
+        <option value="ALL">All benches &mdash; comparative view</option>
+        <optgroup label="Individual benches">
+          <option value="Principal Bench">Principal Bench (New Delhi)</option>
+          <option value="Ahmedabad">Ahmedabad</option><option value="Allahabad">Allahabad</option>
+          <option value="Bengaluru">Bengaluru</option><option value="Chandigarh">Chandigarh</option>
+          <option value="Chennai">Chennai</option><option value="Cuttack">Cuttack</option>
+          <option value="Ernakulam">Ernakulam</option><option value="Guwahati">Guwahati</option>
+          <option value="Hyderabad">Hyderabad &#9888;</option><option value="Jabalpur">Jabalpur</option>
+          <option value="Jaipur">Jaipur</option><option value="Jammu">Jammu &#9888;</option>
+          <option value="Jodhpur">Jodhpur</option><option value="Kolkata">Kolkata</option>
+          <option value="Lucknow">Lucknow</option><option value="Mumbai">Mumbai</option>
+          <option value="Patna">Patna</option><option value="Srinagar">Srinagar &#9888;</option>
+        </optgroup>
+      </select>
+    </div>
+  </div>
+  <div id="city-all">
+    <div class="sort-bar">
+      <label>Sort by:</label>
+      <select id="city-sort" onchange="initAllBenches()">
+        <option value="pend">Closing Pendency (Dec 2025) &#8595;</option>
+        <option value="cont">Contempt Pending (2025) &#8595;</option>
+      </select>
+    </div>
+    <div class="sbwrap">
+      <button class="sb on" data-ab="pend" onclick="switchAb('pend',this)">Pendency</button>
+      <button class="sb" data-ab="aging" onclick="switchAb('aging',this)">Case Aging</button>
+      <button class="sb" data-ab="wps" onclick="switchAb('wps',this)">WP / SLP</button>
+      <button class="sb" data-ab="cont" onclick="switchAb('cont',this)">Contempt</button>
+    </div>
+    <div id="ab-pend" class="card"><div style="font-size:13px;font-weight:600;color:var(--navy);margin-bottom:10px">Closing pendency &mdash; all benches, December 2025</div><div class="ch" style="height:540px"><canvas id="ab-pend-c"></canvas></div></div>
+    <div id="ab-aging" class="card dn">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:9px;margin-bottom:10px">
+        <div style="font-size:13px;font-weight:600;color:var(--navy)">Case aging &mdash; all benches (Page 16 of RTI)</div>
+        <select id="aging-filter" onchange="buildAbAging()" style="padding:5px 9px;font-size:12px">
+          <option value="all">All aging bands (stacked)</option>
+          <option value="g1">&gt; 1 year only</option>
+          <option value="g3">&gt; 3 years only</option>
+          <option value="g5">&gt; 5 years only</option>
+          <option value="g10">&gt; 10 years only</option>
+        </select>
+      </div>
+      <div class="leg" id="aging-leg"><span><span class="ld" style="background:var(--blue)"></span>&gt;1 yr</span><span><span class="ld" style="background:var(--gold)"></span>&gt;3 yrs</span><span><span class="ld" style="background:var(--brown)"></span>&gt;5 yrs</span><span><span class="ld" style="background:#b03030"></span>&gt;10 yrs</span></div>
+      <div class="ch" style="height:390px"><canvas id="ab-aging-c"></canvas></div>
+    </div>
+    <div id="ab-wps" class="card dn">
+      <div style="font-size:13px;font-weight:600;color:var(--navy);margin-bottom:8px">WP filed, decided, reversed &mdash; by bench (Dec 2024, cumulative since 1998)</div>
+      <div class="leg"><span><span class="ld" style="background:#1a4a7c"></span>Filed</span><span><span class="ld" style="background:var(--green2)"></span>Decided</span><span><span class="ld" style="background:#b03030"></span>Reversed</span></div>
+      <div class="ch" style="height:340px"><canvas id="ab-wp-c"></canvas></div>
+      <div style="font-size:13px;font-weight:600;color:var(--navy);margin:16px 0 8px">Uphold rate by bench (% of decided WPs where CAT order was upheld)</div>
+      <div style="font-size:11px;color:var(--mid);margin-bottom:8px">Green = uphold rate &ge;60%; Amber = 40-60%; Red = &lt;40%</div>
+      <div class="ch" style="height:320px"><canvas id="ab-uphold-c"></canvas></div>
+    </div>
+    <div id="ab-cont" class="card dn">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:9px;margin-bottom:9px">
+        <div style="font-size:13px;font-weight:600;color:var(--navy)">Contempt petitions &mdash; all benches</div>
+        <div style="display:flex;align-items:center;gap:7px"><label style="font-size:12px;color:var(--mid)">Year:</label>
+          <select id="ab-cont-yr" onchange="buildAbCont()" style="padding:4px 8px;font-size:12px"><option value="2021">2021</option><option value="2022">2022</option><option value="2023">2023</option><option value="2024">2024</option><option value="2025" selected>2025</option></select>
+        </div>
+      </div>
+      <div class="leg"><span><span class="ld" style="background:var(--blue)"></span>Instituted</span><span><span class="ld" style="background:var(--green2)"></span>Disposed</span><span><span class="ld" style="background:#b03030"></span>Pending</span></div>
+      <div class="ch" style="height:370px"><canvas id="ab-cont-c"></canvas></div>
+    </div>
+  </div>
+  <div id="city-single" class="dn">
+    <div id="bench-hdr" class="bh"></div>
+    <div class="sbwrap">
+      <button class="sb on" data-bs="bov" onclick="switchBs('bov',this)">Overview</button>
+      <button class="sb" data-bs="bcf" onclick="switchBs('bcf',this)">Case Flow</button>
+      <button class="sb" data-bs="bag" onclick="switchBs('bag',this)">Case Aging</button>
+      <button class="sb" data-bs="blg" onclick="switchBs('blg',this)">Legal Data</button>
+      <button class="sb" data-bs="bct" onclick="switchBs('bct',this)">Contempt Trend</button>
+    </div>
+    <div id="bs-bov"></div><div id="bs-bcf" class="dn"></div><div id="bs-bag" class="dn"></div><div id="bs-blg" class="dn"></div><div id="bs-bct" class="dn"></div>
+  </div>
+</div>
+<div id="tab-legal" class="dn">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+    <div><div style="font-size:15px;font-weight:700;color:var(--navy)">WP / SLP Legal Data</div><div style="font-size:11px;color:var(--mid);margin-top:2px">Cumulative figures since 1998. Table updates with year selection.</div></div>
+    <select id="leg-yr" onchange="updateLegalYear()" style="padding:6px 10px;font-weight:500"><option value="0">Dec 2020</option><option value="1">Dec 2021</option><option value="2">Dec 2022</option><option value="3">Dec 2023</option><option value="4" selected>Dec 2024</option></select>
+  </div>
+  <div id="leg-stat-grid" class="stat-grid" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr));margin-bottom:15px"></div>
+  <div class="row2">
+    <div class="card"><div style="font-size:12px;font-weight:600;color:var(--navy);margin-bottom:9px">5 WP metrics</div><div class="ch" style="height:260px"><canvas id="leg-bar"></canvas></div></div>
+    <div class="card"><div style="font-size:12px;font-weight:600;color:var(--navy);margin-bottom:6px">Outcome distribution</div>
+      <div class="leg"><span><span class="ld" style="background:var(--green2)"></span>Upheld</span><span><span class="ld" style="background:#b03030"></span>Reversed</span><span><span class="ld" style="background:var(--gold)"></span>Partly Allowed</span></div>
+      <div class="ch" style="height:240px"><canvas id="leg-pie"></canvas></div>
+    </div>
+  </div>
+  <div class="card">
+    <div style="font-size:12px;font-weight:600;color:var(--navy);margin-bottom:10px">Bench-wise WP / SLP &mdash; <span id="leg-tbl-yr-lbl">Dec 2024</span> (cumulative since 1998)</div>
+    <div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Bench</th><th class="r">WPs Filed</th><th class="r">WPs Decided</th><th class="r">% Decided</th><th class="r">Upheld</th><th class="r">Reversed</th><th class="r">Uphold Rate</th><th class="r">SLPs Filed</th></tr></thead><tbody id="leg-tbl-body"></tbody></table></div>
+  </div>
+</div>
+<div id="tab-takeaways" class="dn">
+  <div style="font-size:14px;font-weight:700;color:var(--navy);margin-bottom:4px">Key Takeaways</div>
+  <div style="font-size:11px;color:var(--mid);margin-bottom:12px">Observations from RTI Application No. CADMT/R/E/26/00082</div>
+  <div class="kt-grid">
+    <div class="kt-item"><div class="kt-num">01</div><div class="kt-title">Persistent vacancy gaps</div><div class="kt-body">3 of 69 posts vacant as of March 2026. Hyderabad AM vacant 30+ months since Sept 2023.</div></div>
+    <div class="kt-item"><div class="kt-num">02</div><div class="kt-title">Erratic appointment cycle</div><div class="kt-body">4 of 10 years (2016-2025) had zero appointments. 2019 alone = 36% of all decade appointments.</div></div>
+    <div class="kt-item"><div class="kt-num">03</div><div class="kt-title">Sub-statutory tenures</div><div class="kt-body">Avg AM tenure 3y 8m (73%) and JM tenure 2y 11m (58%) of 5-year statutory term. Six members under 2 years since 2015.</div></div>
+    <div class="kt-item"><div class="kt-num">04</div><div class="kt-title">Large pending backlog</div><div class="kt-body">69,734 cases pending Dec 2025. Monthly disposal = 3.8% of 72,516 total. Very low clearance rate.</div></div>
+    <div class="kt-item"><div class="kt-num">05</div><div class="kt-title">Deep-rooted old cases</div><div class="kt-body">Principal Bench: 669 cases &gt;10 years. Kolkata: 512. Allahabad: 493. Thousands &gt;5 years across all benches.</div></div>
+    <div class="kt-item"><div class="kt-num">06</div><div class="kt-title">HC uphold rate ~48%</div><div class="kt-body">Of decided WPs, 48.3% upheld CAT orders; 27.3% reversed. About 11,957 WPs still pending in High Courts as of Dec 2024.</div></div>
+    <div class="kt-item"><div class="kt-num">07</div><div class="kt-title">Pendency peak and recovery</div><div class="kt-body">Pendency peaked at 80,545 in Dec 2022 and declined 13.4% to 69,734 by Dec 2025.</div></div>
+    <div class="kt-item"><div class="kt-num">08</div><div class="kt-title">Infrastructure costs</div><div class="kt-body">Kolkata: Rs 8,56,400/mo. Bengaluru: Rs 5,40,900. Mumbai: Rs 5,21,640. Chennai: Rs 29,466 (HC building).</div></div>
+    <div class="kt-item"><div class="kt-num">09</div><div class="kt-title">Rising contempt petitions</div><div class="kt-body">Principal Bench contempt grew 3x: 366 (2021) to 1,091 (2025). In 2025, disposal matched institution for the first time.</div></div>
+  </div>
+  <div class="note" style="margin-top:14px">Source: RTI Application No. CADMT/R/E/26/00082 dated 23 March 2026. Replied by Deputy Registrar (JA), CAT Principal Bench on 23 April 2026 (File No. CAT-PB021/46/2026-JA-PB). All data cross-verified against Form No. 25 (Pages 3-12), WP/SLP tables (Pages 17-21), contempt table (Page 22), aging table (Page 16), and membership list (Page 23).</div>
+</div>
+</div>
+<script>
+Chart.register(ChartDataLabels);
+Chart.defaults.plugins.datalabels.display=false;
+const DEF_APPT=[{y:'2016',JM:7,AM:4},{y:'2017',JM:0,AM:0},{y:'2018',JM:5,AM:6},{y:'2019',JM:17,AM:15},{y:'2020',JM:0,AM:0},{y:'2021',JM:0,AM:0},{y:'2022',JM:9,AM:7},{y:'2023',JM:0,AM:0},{y:'2024',JM:2,AM:11},{y:'2025',JM:3,AM:3}];
+const DEF_CFH=[{p:'Dec 2016',total:43543,disp:1608,pend:41935},{p:'Dec 2017',total:43211,disp:1991,pend:41217},{p:'Dec 2018',total:52460,disp:2407,pend:50053},{p:'Dec 2019',total:50805,disp:1848,pend:48957},{p:'Dec 2020',total:63879,disp:1596,pend:62183},{p:'Dec 2021',total:76401,disp:1834,pend:74567},{p:'Dec 2022',total:83050,disp:2505,pend:80545},{p:'Dec 2023',total:77483,disp:2868,pend:74615},{p:'Dec 2024',total:74662,disp:2509,pend:72153},{p:'Dec 2025',total:72516,disp:2782,pend:69734}];
+const DEF_WPY=[{p:'Dec 2020',f:56904,d:43080,u:21797,r:12387,pa:6269,slpF:4672,slpD:3641},{p:'Dec 2021',f:58946,d:44196,u:22630,r:12596,pa:6369,slpF:4555,slpD:3813},{p:'Dec 2022',f:59291,d:45846,u:23265,r:12680,pa:6379,slpF:4858,slpD:4150},{p:'Dec 2023',f:60148,d:45981,u:22026,r:12759,pa:6403,slpF:4922,slpD:4244},{p:'Dec 2024',f:59409,d:47452,u:22939,r:12929,pa:6527,slpF:5015,slpD:4429}];
+const DEF_CONT=[{y:'2021',i:366,d:301,p:503},{y:'2022',i:463,d:554,p:412},{y:'2023',i:914,d:730,p:596},{y:'2024',i:1006,d:902,p:700},{y:'2025',i:1091,d:1091,p:1001}];
+const DEF_BDY=[{"Principal Bench":{"f":10546,"dc":7950,"u":4659,"r":920,"pa":1687,"slp":760},"Ahmedabad":{"f":1882,"dc":1681,"u":821,"r":492,"pa":368,"slp":48},"Allahabad":{"f":5553,"dc":4796,"u":1747,"r":2753,"pa":296,"slp":23},"Bengaluru":{"f":2502,"dc":2502,"u":1142,"r":575,"pa":652,"slp":220},"Chandigarh":{"f":1765,"dc":1601,"u":1076,"r":226,"pa":299,"slp":74},"Chennai":{"f":5279,"dc":4043,"u":995,"r":2311,"pa":737,"slp":1207},"Cuttack":{"f":3483,"dc":1206,"u":633,"r":271,"pa":298,"slp":3},"Ernakulam":{"f":6327,"dc":5690,"u":3950,"r":777,"pa":963,"slp":1272},"Guwahati":{"f":665,"dc":450,"u":301,"r":42,"pa":110,"slp":11},"Hyderabad":{"f":3225,"dc":1577,"u":920,"r":131,"pa":526,"slp":163},"Jabalpur":{"f":1609,"dc":1110,"u":535,"r":376,"pa":198,"slp":116},"Jaipur":{"f":null,"dc":null,"u":null,"r":null,"pa":null,"slp":69},"Jammu":{"f":null,"dc":null,"u":null,"r":null,"pa":null,"slp":null},"Jodhpur":{"f":455,"dc":2,"u":null,"r":null,"pa":null,"slp":20},"Kolkata":{"f":6366,"dc":5087,"u":2409,"r":2670,"pa":8,"slp":652},"Lucknow":{"f":883,"dc":627,"u":443,"r":97,"pa":80,"slp":2},"Mumbai":{"f":1808,"dc":1510,"u":979,"r":486,"pa":43,"slp":32},"Patna":{"f":3473,"dc":3248,"u":1187,"r":260,"pa":4,"slp":0},"Srinagar":{"f":null,"dc":null,"u":null,"r":null,"pa":null,"slp":null}},{"Principal Bench":{"f":10944,"dc":8144,"u":4818,"r":936,"pa":1702,"slp":467},"Ahmedabad":{"f":1934,"dc":1694,"u":830,"r":495,"pa":369,"slp":50},"Allahabad":{"f":6312,"dc":4800,"u":1747,"r":2756,"pa":297,"slp":23},"Bengaluru":{"f":2542,"dc":2540,"u":1148,"r":591,"pa":671,"slp":220},"Chandigarh":{"f":1828,"dc":1627,"u":1095,"r":231,"pa":301,"slp":79},"Chennai":{"f":5387,"dc":4090,"u":1022,"r":2311,"pa":744,"slp":1227},"Cuttack":{"f":3541,"dc":1257,"u":675,"r":271,"pa":307,"slp":3},"Ernakulam":{"f":6449,"dc":5793,"u":4004,"r":806,"pa":984,"slp":1320},"Guwahati":{"f":670,"dc":450,"u":305,"r":42,"pa":110,"slp":12},"Hyderabad":{"f":3261,"dc":1604,"u":921,"r":144,"pa":539,"slp":163},"Jabalpur":{"f":1639,"dc":1119,"u":537,"r":378,"pa":199,"slp":116},"Jaipur":{"f":1083,"dc":0,"u":0,"r":0,"pa":0,"slp":69},"Jammu":{"f":0,"dc":0,"u":0,"r":0,"pa":0,"slp":0},"Jodhpur":{"f":455,"dc":2,"u":null,"r":null,"pa":null,"slp":20},"Kolkata":{"f":6475,"dc":5277,"u":2520,"r":2741,"pa":16,"slp":752},"Lucknow":{"f":1142,"dc":1034,"u":837,"r":147,"pa":80,"slp":2},"Mumbai":{"f":1811,"dc":1517,"u":984,"r":487,"pa":46,"slp":32},"Patna":{"f":3473,"dc":3248,"u":1187,"r":260,"pa":4,"slp":0},"Srinagar":{"f":null,"dc":null,"u":null,"r":null,"pa":null,"slp":null}},{"Principal Bench":{"f":11481,"dc":8576,"u":4963,"r":979,"pa":1730,"slp":472},"Ahmedabad":{"f":1948,"dc":1704,"u":832,"r":501,"pa":370,"slp":52},"Allahabad":{"f":5556,"dc":4802,"u":1747,"r":2757,"pa":297,"slp":23},"Bengaluru":{"f":2577,"dc":2577,"u":1143,"r":581,"pa":661,"slp":470},"Chandigarh":{"f":1855,"dc":1669,"u":1132,"r":234,"pa":303,"slp":79},"Chennai":{"f":5433,"dc":4166,"u":1074,"r":2319,"pa":773,"slp":1249},"Cuttack":{"f":3627,"dc":1342,"u":735,"r":275,"pa":326,"slp":3},"Ernakulam":{"f":6516,"dc":5860,"u":4037,"r":813,"pa":1011,"slp":1343},"Guwahati":{"f":1490,"dc":1203,"u":43,"r":18,"pa":9,"slp":0},"Hyderabad":{"f":3304,"dc":1619,"u":928,"r":159,"pa":541,"slp":163},"Jabalpur":{"f":1683,"dc":1162,"u":553,"r":393,"pa":208,"slp":124},"Jaipur":{"f":1083,"dc":0,"u":0,"r":0,"pa":0,"slp":69},"Jammu":{"f":0,"dc":0,"u":0,"r":0,"pa":0,"slp":0},"Jodhpur":{"f":455,"dc":2,"u":null,"r":null,"pa":null,"slp":20},"Kolkata":{"f":6517,"dc":5354,"u":2562,"r":2755,"pa":17,"slp":757},"Lucknow":{"f":458,"dc":1034,"u":837,"r":147,"pa":80,"slp":2},"Mumbai":{"f":1810,"dc":1517,"u":984,"r":481,"pa":46,"slp":32},"Patna":{"f":3498,"dc":3259,"u":1187,"r":268,"pa":7,"slp":0},"Srinagar":{"f":0,"dc":0,"u":0,"r":0,"pa":0,"slp":0}},{"Principal Bench":{"f":11770,"dc":8740,"u":4495,"r":987,"pa":1732,"slp":481},"Ahmedabad":{"f":1964,"dc":1715,"u":840,"r":504,"pa":371,"slp":54},"Allahabad":{"f":5556,"dc":4808,"u":1747,"r":2763,"pa":297,"slp":23},"Bengaluru":{"f":2604,"dc":2604,"u":1150,"r":589,"pa":667,"slp":79},"Chandigarh":{"f":1867,"dc":1675,"u":1133,"r":239,"pa":303,"slp":85},"Chennai":{"f":5544,"dc":4374,"u":1206,"r":2369,"pa":799,"slp":1261},"Cuttack":{"f":3687,"dc":1402,"u":761,"r":279,"pa":355,"slp":3},"Ernakulam":{"f":6637,"dc":5981,"u":4115,"r":818,"pa":1049,"slp":1366},"Guwahati":{"f":1494,"dc":1207,"u":47,"r":18,"pa":9,"slp":0},"Hyderabad":{"f":3382,"dc":1767,"u":974,"r":253,"pa":530,"slp":173},"Jabalpur":{"f":1722,"dc":1183,"u":574,"r":401,"pa":208,"slp":125},"Jaipur":{"f":1084,"dc":0,"u":0,"r":0,"pa":0,"slp":69},"Jammu":{"f":0,"dc":0,"u":0,"r":0,"pa":0,"slp":0},"Jodhpur":{"f":455,"dc":2,"u":null,"r":null,"pa":null,"slp":4},"Kolkata":{"f":6518,"dc":5354,"u":2562,"r":2755,"pa":13,"slp":757},"Lucknow":{"f":556,"dc":393,"u":251,"r":35,"pa":13,"slp":2},"Mumbai":{"f":1810,"dc":1517,"u":984,"r":481,"pa":46,"slp":32},"Patna":{"f":3498,"dc":3259,"u":1187,"r":268,"pa":7,"slp":0},"Srinagar":{"f":0,"dc":0,"u":0,"r":0,"pa":0,"slp":0}},{"Principal Bench":{"f":12078,"dc":8754,"u":5035,"r":995,"pa":1733,"slp":495},"Ahmedabad":{"f":1995,"dc":1747,"u":870,"r":505,"pa":372,"slp":55},"Allahabad":{"f":5559,"dc":4817,"u":1748,"r":2771,"pa":297,"slp":23},"Bengaluru":{"f":2616,"dc":2616,"u":1152,"r":596,"pa":669,"slp":79},"Chandigarh":{"f":1898,"dc":1679,"u":1134,"r":239,"pa":303,"slp":79},"Chennai":{"f":5606,"dc":4617,"u":1344,"r":2433,"pa":840,"slp":1271},"Cuttack":{"f":3727,"dc":1442,"u":780,"r":279,"pa":376,"slp":3},"Ernakulam":{"f":6847,"dc":6179,"u":4253,"r":868,"pa":1060,"slp":1392},"Guwahati":{"f":1070,"dc":943,"u":60,"r":20,"pa":9,"slp":5},"Hyderabad":{"f":3386,"dc":1830,"u":991,"r":267,"pa":578,"slp":194},"Jabalpur":{"f":1784,"dc":1217,"u":588,"r":420,"pa":209,"slp":125},"Jaipur":{"f":null,"dc":1084,"u":null,"r":null,"pa":null,"slp":69},"Jammu":{"f":null,"dc":null,"u":null,"r":null,"pa":null,"slp":null},"Jodhpur":{"f":455,"dc":2,"u":null,"r":null,"pa":null,"slp":20},"Kolkata":{"f":6523,"dc":5356,"u":2562,"r":2757,"pa":17,"slp":757},"Lucknow":{"f":557,"dc":393,"u":251,"r":35,"pa":13,"slp":2},"Mumbai":{"f":1810,"dc":1517,"u":984,"r":476,"pa":44,"slp":32},"Patna":{"f":3498,"dc":3259,"u":1187,"r":268,"pa":7,"slp":0},"Srinagar":{"f":null,"dc":null,"u":null,"r":null,"pa":null,"slp":null}}];
+const DEF_CTALL={"Principal Bench":[{"y":"2021","i":366,"d":301,"p":503},{"y":"2022","i":463,"d":554,"p":412},{"y":"2023","i":914,"d":730,"p":596},{"y":"2024","i":1006,"d":902,"p":700},{"y":"2025","i":1091,"d":1091,"p":1001}],"Ahmedabad":[{"y":"2021","i":13,"d":32,"p":24},{"y":"2022","i":39,"d":32,"p":15},{"y":"2023","i":36,"d":27,"p":24},{"y":"2024","i":45,"d":39,"p":30},{"y":"2025","i":29,"d":34,"p":23}],"Allahabad":[{"y":"2021","i":87,"d":157,"p":263},{"y":"2022","i":166,"d":166,"p":426},{"y":"2023","i":181,"d":344,"p":263},{"y":"2024","i":384,"d":225,"p":422},{"y":"2025","i":317,"d":363,"p":376}],"Bengaluru":[{"y":"2021","i":110,"d":192,"p":826},{"y":"2022","i":84,"d":166,"p":20},{"y":"2023","i":61,"d":54,"p":18},{"y":"2024","i":110,"d":80,"p":55},{"y":"2025","i":59,"d":78,"p":36}],"Chandigarh":[{"y":"2021","i":5,"d":8,"p":8},{"y":"2022","i":5,"d":13,"p":15},{"y":"2023","i":36,"d":27,"p":24},{"y":"2024","i":237,"d":27,"p":422},{"y":"2025","i":204,"d":309,"p":309}],"Chennai":[{"y":"2021","i":67,"d":80,"p":161},{"y":"2022","i":84,"d":80,"p":93},{"y":"2023","i":73,"d":81,"p":116},{"y":"2024","i":92,"d":102,"p":139},{"y":"2025","i":98,"d":89,"p":131}],"Cuttack":[{"y":"2021","i":41,"d":11,"p":11},{"y":"2022","i":2,"d":3,"p":18},{"y":"2023","i":53,"d":74,"p":60},{"y":"2024","i":254,"d":656,"p":83},{"y":"2025","i":113,"d":117,"p":283}],"Ernakulam":[{"y":"2021","i":44,"d":113,"p":355},{"y":"2022","i":80,"d":51,"p":393},{"y":"2023","i":80,"d":109,"p":355},{"y":"2024","i":142,"d":61,"p":254},{"y":"2025","i":146,"d":117,"p":283}],"Guwahati":[{"y":"2021","i":5,"d":1,"p":4},{"y":"2022","i":22,"d":2,"p":2},{"y":"2023","i":2,"d":6,"p":0},{"y":"2024","i":15,"d":1,"p":15},{"y":"2025","i":15,"d":7,"p":23}],"Hyderabad":[{"y":"2021","i":32,"d":32,"p":24},{"y":"2022","i":43,"d":32,"p":90},{"y":"2023","i":113,"d":80,"p":40},{"y":"2024","i":113,"d":80,"p":60},{"y":"2025","i":113,"d":161,"p":35}],"Jabalpur":[{"y":"2021","i":76,"d":30,"p":568},{"y":"2022","i":296,"d":187,"p":459},{"y":"2023","i":296,"d":187,"p":568},{"y":"2024","i":414,"d":559,"p":423},{"y":"2025","i":767,"d":465,"p":725}],"Jaipur":[{"y":"2021","i":22,"d":8,"p":101},{"y":"2022","i":42,"d":30,"p":104},{"y":"2023","i":47,"d":69,"p":40},{"y":"2024","i":113,"d":86,"p":128},{"y":"2025","i":73,"d":131,"p":68}],"Jammu":[{"y":"2021","i":28,"d":36,"p":267},{"y":"2022","i":301,"d":259,"p":105},{"y":"2023","i":296,"d":187,"p":46},{"y":"2024","i":270,"d":134,"p":187},{"y":"2025","i":91,"d":222,"p":58}],"Jodhpur":[{"y":"2021","i":39,"d":27,"p":24},{"y":"2022","i":39,"d":32,"p":15},{"y":"2023","i":36,"d":27,"p":24},{"y":"2024","i":45,"d":39,"p":30},{"y":"2025","i":29,"d":34,"p":23}],"Kolkata":[{"y":"2021","i":463,"d":554,"p":412},{"y":"2022","i":235,"d":233,"p":700},{"y":"2023","i":245,"d":386,"p":559},{"y":"2024","i":270,"d":232,"p":560},{"y":"2025","i":204,"d":251,"p":526}],"Lucknow":[{"y":"2021","i":47,"d":74,"p":47},{"y":"2022","i":19,"d":104,"p":47},{"y":"2023","i":19,"d":74,"p":20},{"y":"2024","i":154,"d":43,"p":233},{"y":"2025","i":128,"d":129,"p":131}],"Mumbai":[{"y":"2021","i":115,"d":141,"p":168},{"y":"2022","i":38,"d":89,"p":222},{"y":"2023","i":62,"d":60,"p":208},{"y":"2024","i":240,"d":184,"p":297},{"y":"2025","i":188,"d":149,"p":400}],"Patna":[{"y":"2021","i":30,"d":30,"p":36},{"y":"2022","i":85,"d":30,"p":284},{"y":"2023","i":102,"d":102,"p":297},{"y":"2024","i":115,"d":141,"p":131},{"y":"2025","i":173,"d":229,"p":113}],"Srinagar":[{"y":"2021","i":0,"d":52,"p":226},{"y":"2022","i":284,"d":89,"p":284},{"y":"2023","i":207,"d":81,"p":297},{"y":"2024","i":231,"d":85,"p":443},{"y":"2025","i":379,"d":691,"p":131}]};
+const DEF_AGING={"Principal Bench":{"g1":12608,"g3":6745,"g5":4100,"g10":669},"Ahmedabad":{"g1":1557,"g3":966,"g5":633,"g10":5},"Allahabad":{"g1":4650,"g3":2746,"g5":1757,"g10":493},"Bengaluru":{"g1":806,"g3":297,"g5":232,"g10":0},"Chandigarh":{"g1":4563,"g3":2560,"g5":1504,"g10":6},"Chennai":{"g1":3437,"g3":1465,"g5":859,"g10":39},"Cuttack":{"g1":1906,"g3":948,"g5":395,"g10":21},"Ernakulam":{"g1":2072,"g3":1233,"g5":778,"g10":63},"Guwahati":{"g1":675,"g3":293,"g5":136,"g10":0},"Hyderabad":{"g1":1274,"g3":555,"g5":270,"g10":16},"Jabalpur":{"g1":4222,"g3":2315,"g5":1371,"g10":136},"Jaipur":{"g1":2095,"g3":1499,"g5":918,"g10":8},"Jammu":{"g1":3287,"g3":1159,"g5":524,"g10":0},"Jodhpur":{"g1":913,"g3":537,"g5":357,"g10":47},"Kolkata":{"g1":5131,"g3":3248,"g5":2286,"g10":512},"Lucknow":{"g1":1560,"g3":810,"g5":475,"g10":41},"Mumbai":{"g1":3506,"g3":1892,"g5":994,"g10":196},"Patna":{"g1":2615,"g3":1571,"g5":1067,"g10":7},"Srinagar":{"g1":5975,"g3":3897,"g5":2709,"g10":0}};
+const DEF_C25={"Principal Bench":{"o":13932,"i":520,"t":14452,"d":505,"cl":13947},"Ahmedabad":{"o":1651,"i":87,"t":1738,"d":87,"cl":1651},"Allahabad":{"o":5235,"i":175,"t":5519,"d":221,"cl":5298},"Bengaluru":{"o":904,"i":69,"t":973,"d":32,"cl":941},"Chandigarh":{"o":4882,"i":168,"t":5242,"d":198,"cl":4935},"Chennai":{"o":3749,"i":191,"t":4100,"d":156,"cl":3848},"Cuttack":{"o":2206,"i":168,"t":2448,"d":157,"cl":2189},"Ernakulam":{"o":2356,"i":82,"t":2438,"d":88,"cl":2350},"Guwahati":{"o":733,"i":33,"t":767,"d":10,"cl":757},"Hyderabad":{"o":4511,"i":205,"t":4706,"d":41,"cl":4650},"Jabalpur":{"o":4368,"i":307,"t":4675,"d":149,"cl":4099},"Jaipur":{"o":2245,"i":73,"t":2319,"d":39,"cl":2280},"Jammu":{"o":2245,"i":338,"t":2583,"d":607,"cl":2753},"Jodhpur":{"o":1000,"i":17,"t":1017,"d":41,"cl":976},"Kolkata":{"o":5392,"i":219,"t":5615,"d":149,"cl":5466},"Lucknow":{"o":1734,"i":65,"t":1799,"d":74,"cl":1738},"Mumbai":{"o":3778,"i":114,"t":3894,"d":73,"cl":3821},"Patna":{"o":2737,"i":97,"t":2834,"d":84,"cl":2753},"Srinagar":{"o":5982,"i":210,"t":6192,"d":119,"cl":6073}};
+const DEF_MEMB={"Principal Bench":{"city":"New Delhi","s":11,"af":6,"av":0,"jf":5,"jv":0,"vn":null,"infra":null},"Ahmedabad":{"city":"Ahmedabad","s":2,"af":1,"av":0,"jf":1,"jv":0,"vn":null,"infra":null},"Allahabad":{"city":"Allahabad","s":6,"af":3,"av":0,"jf":3,"jv":0,"vn":null,"infra":null},"Bengaluru":{"city":"Bengaluru","s":4,"af":2,"av":0,"jf":2,"jv":0,"vn":null,"infra":{"type":"GPOA/CGO Complex","cost":540900,"pay":"Licence Fee"}},"Chandigarh":{"city":"Chandigarh","s":4,"af":2,"av":0,"jf":2,"jv":0,"vn":null,"infra":null},"Chennai":{"city":"Chennai","s":4,"af":2,"av":0,"jf":2,"jv":0,"vn":null,"infra":{"type":"High Court Building","cost":29466,"pay":"Rent"}},"Cuttack":{"city":"Cuttack","s":2,"af":1,"av":0,"jf":1,"jv":0,"vn":null,"infra":null},"Ernakulam":{"city":"Ernakulam","s":4,"af":2,"av":0,"jf":2,"jv":0,"vn":null,"infra":null},"Guwahati":{"city":"Guwahati","s":2,"af":1,"av":0,"jf":1,"jv":0,"vn":null,"infra":null},"Hyderabad":{"city":"Hyderabad","s":4,"af":2,"av":0,"jf":1,"jv":1,"vn":"Admin. Member vacant since 15 Sep 2023","infra":null},"Jabalpur":{"city":"Jabalpur","s":2,"af":1,"av":0,"jf":1,"jv":0,"vn":null,"infra":null},"Jaipur":{"city":"Jaipur","s":2,"af":1,"av":0,"jf":1,"jv":0,"vn":null,"infra":null},"Jammu":{"city":"Jammu","s":4,"af":2,"av":0,"jf":1,"jv":1,"vn":"Judicial Member vacant since 23 Mar 2026","infra":null},"Jodhpur":{"city":"Jodhpur","s":2,"af":1,"av":0,"jf":1,"jv":0,"vn":null,"infra":null},"Kolkata":{"city":"Kolkata","s":4,"af":2,"av":0,"jf":2,"jv":0,"vn":null,"infra":{"type":"GPOA/CGO Complex","cost":856400,"pay":"Licence Fee"}},"Lucknow":{"city":"Lucknow","s":2,"af":1,"av":0,"jf":1,"jv":0,"vn":null,"infra":null},"Mumbai":{"city":"Mumbai","s":4,"af":2,"av":0,"jf":2,"jv":0,"vn":null,"infra":{"type":"GPOA/CGO Complex","cost":521640,"pay":"Licence Fee"}},"Patna":{"city":"Patna","s":2,"af":1,"av":0,"jf":1,"jv":0,"vn":null,"infra":null},"Srinagar":{"city":"Srinagar","s":4,"af":1,"av":1,"jf":2,"jv":0,"vn":"Admin. Member vacant since 30 Oct 2025","infra":null}};
+const BN=['Principal Bench','Ahmedabad','Allahabad','Bengaluru','Chandigarh','Chennai','Cuttack','Ernakulam','Guwahati','Hyderabad','Jabalpur','Jaipur','Jammu','Jodhpur','Kolkata','Lucknow','Mumbai','Patna','Srinagar'];
+const WY=['Dec 2020','Dec 2021','Dec 2022','Dec 2023','Dec 2024'];
+function cloneD(x){return JSON.parse(JSON.stringify(x));}
+function loadS(){try{const s=localStorage.getItem('cat_v5');if(s)return JSON.parse(s);}catch(e){}return{APPT:cloneD(DEF_APPT),CFH:cloneD(DEF_CFH),WPY:cloneD(DEF_WPY),CONT:cloneD(DEF_CONT),BDY:cloneD(DEF_BDY),CTALL:cloneD(DEF_CTALL),AGING:cloneD(DEF_AGING),C25:cloneD(DEF_C25),MEMB:cloneD(DEF_MEMB)};}
+function saveS(){try{localStorage.setItem('cat_v5',JSON.stringify(S));}catch(e){}showSaved();}
+function resetDef(){if(!confirm('Reset ALL data to original RTI values?'))return;localStorage.removeItem('cat_v5');S=loadS();refreshAll();rebuildEP();showSaved();}
+let S=loadS();
+let YR={f:0,t:null};
+const fmt=v=>v==null?'N/A':Number(v).toLocaleString('en-IN');
+const fmtK=v=>v==null?'N/A':(v/1000).toFixed(1)+'k';
+const GR='rgba(0,0,0,.06)';const TX='#4b5563';
+const cMap={};
+const TT={backgroundColor:'#0d1b2a',titleColor:'#c9a84c',bodyColor:'rgba(255,255,255,.8)',padding:9,cornerRadius:5,callbacks:{label:ctx=>ctx.dataset.label+': '+Number(ctx.raw||0).toLocaleString('en-IN')}};
+const DL={display:true,anchor:'end',align:'top',offset:2,font:{size:8,weight:'600'},color:'#374151',formatter:v=>v!=null&&v>0?v.toLocaleString('en-IN'):''};
+const DLsm={...DL,font:{size:7,weight:'600'}};
+function bO(ex){return{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},datalabels:{display:false},tooltip:TT},scales:{x:{grid:{color:GR},ticks:{color:TX,font:{size:11}}},y:{grid:{color:GR},ticks:{color:TX,font:{size:11}}}},...ex};}
+function mk(id,cfg){if(cMap[id])try{cMap[id].destroy();}catch(e){}const el=document.getElementById(id);if(!el)return null;cMap[id]=new Chart(el,cfg);return cMap[id];}
+function dP(){return S.CFH.map((r,i)=>({p:r.p,v:r.pend,pct:i===0?null:((r.pend-S.CFH[i-1].pend)/S.CFH[i-1].pend*100)}));}
+function fCFH(){const t=YR.t===null?S.CFH.length-1:YR.t;return S.CFH.slice(YR.f,t+1);}
+function fA(){const t=YR.t===null?S.APPT.length-1:Math.min(YR.t,S.APPT.length-1);return S.APPT.slice(YR.f,t+1);}
+function fP(){const P=dP();const t=YR.t===null?P.length-1:Math.min(YR.t,P.length-1);return P.slice(YR.f,t+1);}
+let tsIn=false,legIn=false,cityIn=false;
+function switchTab(id){['overview','ts','city','legal','takeaways'].forEach(t=>document.getElementById('tab-'+t).classList.toggle('dn',t!==id));document.querySelectorAll('.nb').forEach(b=>b.classList.toggle('on',b.dataset.tab===id));if(id==='ts'&&!tsIn){tsIn=true;initTs();}if(id==='legal'&&!legIn){legIn=true;initLegal();}if(id==='city'&&!cityIn){cityIn=true;initAB();}}
+function refreshAll(){updateOv();if(tsIn)rebuildTs();if(legIn)initLegal();if(cityIn)initAB();}
+function updateOv(){
+  const last=S.CFH[S.CFH.length-1];const cr=last.total>0?((last.disp/last.total)*100).toFixed(1):'N/A';
+  const wp=S.WPY[S.WPY.length-1];const vac=BN.reduce((a,b)=>{const m=S.MEMB[b]||{};return a+(m.av||0)+(m.jv||0);},0);
+  document.getElementById('ov-vac').textContent=vac;document.getElementById('ov-total').textContent=last.total.toLocaleString('en-IN');document.getElementById('ov-disp').textContent=last.disp.toLocaleString('en-IN');document.getElementById('ov-cr').textContent=cr+'% clearance';document.getElementById('ov-pend').textContent=last.pend.toLocaleString('en-IN');document.getElementById('ov-pendlbl').textContent=last.p;document.getElementById('ov-wp').textContent=wp.f.toLocaleString('en-IN');document.getElementById('ov-wpdec').textContent='as of '+wp.p;document.getElementById('hdr-pend').textContent=last.pend.toLocaleString('en-IN');document.getElementById('hdr-vac').textContent=vac;
+  mk('ov-appt',{type:'bar',data:{labels:S.APPT.map(d=>d.y),datasets:[{label:'Judicial',data:S.APPT.map(d=>d.JM),backgroundColor:'#1a4a7c',borderRadius:2},{label:'Admin.',data:S.APPT.map(d=>d.AM),backgroundColor:'#c9a84c',borderRadius:2}]},options:{...bO(),plugins:{...bO().plugins,datalabels:{...DLsm,display:ctx=>ctx.dataset.data[ctx.dataIndex]>0}}}});
+  const P=dP();const mx=Math.max(...P.map(d=>d.v));
+  mk('ov-pend-c',{type:'bar',data:{labels:P.map(d=>d.p.slice(4)),datasets:[{label:'Closing Pendency',data:P.map(d=>d.v),backgroundColor:P.map(d=>d.v===mx?'#b03030':'#2563a8'),borderRadius:2}]},options:{...bO(),plugins:{...bO().plugins,datalabels:{...DLsm,display:true,formatter:v=>fmtK(v)}},scales:{x:{grid:{color:GR},ticks:{color:TX,font:{size:8}}},y:{grid:{color:GR},ticks:{color:TX,font:{size:10},callback:v=>fmtK(v)}}}}});
+}
+updateOv();
+function switchTs(id,btn){stopAllPlay();['appt','pend','cfh','wp','cont'].forEach(t=>document.getElementById('ts-'+t).classList.toggle('dn',t!==id));document.querySelectorAll('[data-ts]').forEach(b=>b.classList.toggle('on',b.dataset.ts===id));}
+function initTs(){rebuildTs();}
+function rebuildTs(){bAppt();bPend();bCFH();updateWpChart();bWpAll();bCont();seedPb('appt',fA().length);seedPb('pend',fP().length);seedPb('cfh',fCFH().length);seedPb('cont',S.CONT.length);}
+function applyGYR(){const f=parseInt(document.getElementById('gyr-f').value),t=parseInt(document.getElementById('gyr-t').value);if(f>=t){alert('From must be before To');return;}YR={f,t};document.getElementById('gyr-info').textContent=(t-f+1)+' years';if(tsIn)rebuildTs();}
+function resetGYR(){YR={f:0,t:null};document.getElementById('gyr-f').value='0';document.getElementById('gyr-t').value=String(S.CFH.length-1);document.getElementById('gyr-info').textContent='All '+S.CFH.length+' years';if(tsIn)rebuildTs();}
+function bAppt(){const sl=fA();mk('ts-appt-c',{type:'bar',data:{labels:sl.map(d=>d.y),datasets:[{label:'Judicial',data:sl.map(d=>d.JM),backgroundColor:'#1a4a7c',borderRadius:3},{label:'Admin.',data:sl.map(d=>d.AM),backgroundColor:'#c9a84c',borderRadius:3}]},options:{...bO(),plugins:{...bO().plugins,datalabels:{...DL,display:ctx=>ctx.dataset.data[ctx.dataIndex]>0}},scales:{x:{grid:{color:GR},ticks:{color:TX,font:{size:12}}},y:{beginAtZero:true,grid:{color:GR},ticks:{color:TX}}}}});mkAGrid(sl);}
+function mkAGrid(sl){const g=document.getElementById('ts-appt-grid');g.style.gridTemplateColumns='repeat('+sl.length+',1fr)';g.innerHTML=sl.map(d=>{const t=d.JM+d.AM,z=t===0;return'<div style="text-align:center;padding:6px 3px;border-radius:7px;border:.5px solid '+(z?'#fca5a5':'var(--light)')+';background:'+(z?'#fff5f5':'#f8f4ee')+'"><div style="font-size:9px;color:var(--mid)">'+d.y+'</div><div style="font-size:16px;font-weight:600;color:'+(z?'#b03030':'var(--navy)')+'">'+t+'</div><div style="font-size:9px;color:var(--mid)">JM:'+d.JM+' AM:'+d.AM+'</div></div>';}).join('');}
+function bPend(){const P=fP();const mx=Math.max(...P.map(d=>d.v));mk('ts-pend-c',{type:'bar',data:{labels:P.map(d=>d.p),datasets:[{label:'Closing Pendency',data:P.map(d=>d.v),backgroundColor:P.map(d=>d.pct===null?'#2563a8':d.pct<0?'#3a8a5a':'#b03030'),borderRadius:3}]},options:{...bO(),plugins:{...bO().plugins,datalabels:{display:true,anchor:'end',align:'top',offset:2,font:{size:8,weight:'700'},color:'#374151',formatter:(v,ctx)=>{if(!v)return'';const p=P[ctx.dataIndex].pct;if(p===null)return v.toLocaleString('en-IN');return v.toLocaleString('en-IN')+'\n'+(p>=0?'+':'')+p.toFixed(1)+'%';}}},scales:{x:{grid:{color:GR},ticks:{color:TX,font:{size:9},maxRotation:30}},y:{grid:{color:GR},ticks:{color:TX,font:{size:11},callback:v=>fmtK(v)},suggestedMax:mx*1.18}}}});mkPGrid(P);}
+function mkPGrid(P,frame){const cols=Math.min(P.length,10);const g=document.getElementById('ts-pend-grid');const mx=Math.max(...P.map(d=>d.v));g.style.gridTemplateColumns='repeat('+cols+',1fr)';g.innerHTML=P.map((d,i)=>{const vis=frame==null||i<frame;const up=d.pct>0;return'<div style="text-align:center;padding:5px 2px;border-radius:6px;border:.5px solid var(--light);background:var(--cream);opacity:'+(vis?1:.22)+';transition:opacity .3s"><div style="font-size:8px;color:var(--mid)">'+d.p.slice(4)+'</div><div style="font-size:11px;font-weight:600;color:'+(d.v===mx?'#b03030':'var(--navy)')+'">'+( vis?fmtK(d.v):'-')+'</div>'+(d.pct!==null&&vis?'<div style="font-size:8px;font-weight:600;color:'+(up?'#b03030':'#3a8a5a')+'">'+(up?'\u25b2':'\u25bc')+' '+Math.abs(d.pct).toFixed(1)+'%</div>':'<div style="height:12px"></div>')+'</div>';}).join('');}
+function bCFH(){const cfh=fCFH();mk('ts-cfh-c',{type:'bar',data:{labels:cfh.map(d=>d.p),datasets:[{label:'Total for Disposal',data:cfh.map(d=>d.total),backgroundColor:'#1a4a7c',borderRadius:2},{label:'Cases Disposed',data:cfh.map(d=>d.disp),backgroundColor:'#3a8a5a',borderRadius:2},{label:'Closing Pendency',data:cfh.map(d=>d.pend),backgroundColor:'#b03030',borderRadius:2}]},options:{...bO(),plugins:{...bO().plugins,datalabels:{...DLsm,display:ctx=>ctx.dataset.data[ctx.dataIndex]>0,formatter:v=>v?fmtK(v):''},tooltip:{...TT,callbacks:{label:ctx=>ctx.dataset.label+': '+fmt(ctx.raw)}}},scales:{x:{grid:{display:false},ticks:{color:TX,font:{size:9},maxRotation:30}},y:{grid:{color:GR},ticks:{color:TX,font:{size:11},callback:v=>fmtK(v)}}}}});
+  const last=cfh[cfh.length-1];const first=cfh[0];const pk=cfh.reduce((a,b)=>b.pend>a.pend?b:a,cfh[0]);const dr=(last.disp/last.total*100).toFixed(1);
+  const te=document.getElementById('cfh-trend');if(te)te.innerHTML='<strong>Trend summary:</strong> Period spans <span class="tp tp-o">'+first.p+'</span> to <span class="tp tp-o">'+last.p+'</span>. Pendency peaked at <span class="tp tp-r">'+pk.pend.toLocaleString('en-IN')+' in '+pk.p+'</span> and has since declined to <span class="tp tp-g">'+last.pend.toLocaleString('en-IN')+' in '+last.p+'</span> &mdash; a reduction of <span class="tp tp-g">'+((pk.pend-last.pend)/pk.pend*100).toFixed(1)+'%</span> from peak. Latest monthly disposal rate: <span class="tp '+(parseFloat(dr)>=5?'tp-g':'tp-r')+'">'+dr+'%</span> of total cases available. Total cases disposed in <strong>'+last.p+'</strong>: <span class="tp tp-g">'+last.disp.toLocaleString('en-IN')+'</span>.';}
+function updateWpChart(){const idx=parseInt(document.getElementById('wp-yr-sel').value);const d=S.WPY[idx];if(!d)return;const ls=['WPs Filed','WPs Decided','Upheld','Reversed','Partly Allowed'];const vs=[d.f,d.d,d.u,d.r,d.pa];const cs=['#0d1b2a','#2563a8','#3a8a5a','#b03030','#c9a84c'];mk('ts-wp-c',{type:'bar',data:{labels:ls,datasets:[{label:'Count',data:vs,backgroundColor:cs,borderRadius:3}]},options:{...bO(),plugins:{...bO().plugins,datalabels:{...DL,display:true,formatter:v=>(v||0).toLocaleString('en-IN')},tooltip:{...TT,callbacks:{label:ctx=>ls[ctx.dataIndex]+': '+fmt(ctx.raw)}}},scales:{x:{grid:{display:false},ticks:{color:TX,font:{size:9},maxRotation:25}},y:{grid:{color:GR},ticks:{color:TX,font:{size:11},callback:v=>fmtK(v)}}}}});
+  if(cMap['ts-wp-pie'])try{cMap['ts-wp-pie'].destroy();}catch(e){}const pp=document.getElementById('ts-wp-pie');if(pp)cMap['ts-wp-pie']=new Chart(pp,{type:'pie',data:{labels:['Upheld','Reversed','Partly Allowed'],datasets:[{data:[d.u,d.r,d.pa],backgroundColor:['#3a8a5a','#b03030','#c9a84c'],borderWidth:2,borderColor:'#fff',hoverOffset:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11},padding:6,boxWidth:11}},datalabels:{display:true,formatter:(v,ctx)=>{const t=(d.u+d.r+d.pa)||1;return((v/t)*100).toFixed(1)+'%';},color:'#fff',font:{size:11,weight:'bold'}},tooltip:{...TT,callbacks:{label:ctx=>ctx.label+': '+fmt(ctx.raw)}}}}});
+  const c=document.getElementById('wp-stat-cards');c.style.gridTemplateColumns='repeat(5,1fr)';c.innerHTML=[['WPs Filed',d.f,'#0d1b2a'],['WPs Decided',d.d,'#2563a8'],['Upheld',d.u,'#3a8a5a'],['Reversed',d.r,'#b03030'],['Partly Allowed',d.pa,'#c9a84c']].map(([l,v,c])=>'<div style="text-align:center;padding:9px 5px;background:#fff;border:.5px solid var(--light);border-top:3px solid '+c+';border-radius:7px"><div style="font-size:9px;color:var(--mid);letter-spacing:1px;margin-bottom:3px;text-transform:uppercase">'+l+'</div><div style="font-size:14px;font-weight:600;color:'+c+'">'+(v||0).toLocaleString('en-IN')+'</div></div>').join('');}
+function bWpAll(){mk('ts-wp-all',{type:'bar',data:{labels:S.WPY.map(d=>d.p),datasets:[{label:'Filed',data:S.WPY.map(d=>d.f),backgroundColor:'#0d1b2a',borderRadius:2},{label:'Decided',data:S.WPY.map(d=>d.d),backgroundColor:'#2563a8',borderRadius:2},{label:'Upheld',data:S.WPY.map(d=>d.u),backgroundColor:'#3a8a5a',borderRadius:2},{label:'Reversed',data:S.WPY.map(d=>d.r),backgroundColor:'#b03030',borderRadius:2},{label:'Partly',data:S.WPY.map(d=>d.pa),backgroundColor:'#c9a84c',borderRadius:2}]},options:{...bO(),plugins:{...bO().plugins,datalabels:{...DLsm,display:ctx=>ctx.dataset.data[ctx.dataIndex]>5000,formatter:v=>fmtK(v)},tooltip:{...TT,callbacks:{label:ctx=>ctx.dataset.label+': '+fmt(ctx.raw)}}},scales:{x:{grid:{display:false},ticks:{color:TX,font:{size:10}}},y:{grid:{color:GR},ticks:{color:TX,font:{size:11},callback:v=>fmtK(v)}}}}});}
+function bCont(){mk('ts-cont-c',{type:'bar',data:{labels:S.CONT.map(d=>d.y),datasets:[{label:'Instituted',data:S.CONT.map(d=>d.i),backgroundColor:'#2563a8',borderRadius:3},{label:'Disposed',data:S.CONT.map(d=>d.d),backgroundColor:'#3a8a5a',borderRadius:3},{label:'Pending',data:S.CONT.map(d=>d.p),backgroundColor:'#b03030',borderRadius:3}]},options:{...bO(),plugins:{...bO().plugins,datalabels:{...DL,display:true,formatter:v=>v.toLocaleString('en-IN')}},scales:{x:{grid:{color:GR},ticks:{color:TX,font:{size:12}}},y:{beginAtZero:true,grid:{color:GR},ticks:{color:TX,font:{size:12}}}}}});}
+const PB={};
+function seedPb(id,max){if(PB[id]?.playing)return;PB[id]={frame:0,max,playing:false,timer:null};rPbUI(id);}
+function stopPlay(id){if(!PB[id])return;clearInterval(PB[id].timer);PB[id].playing=false;rPbUI(id);}
+function stopAllPlay(){['appt','pend','cfh','cont'].forEach(stopPlay);}
+function togglePlay(id){if(!PB[id])return;const s=PB[id];if(s.playing){stopPlay(id);return;}if(s.frame>=s.max){s.frame=0;rstF(id);}s.playing=true;rPbUI(id);const spd=parseInt(document.getElementById('pb-'+id+'-spd')?.value)||750;dStep(id);s.timer=setInterval(()=>dStep(id),spd);}
+function dStep(id){const s=PB[id];if(!s)return;if(s.frame>=s.max){clearInterval(s.timer);s.playing=false;rPbUI(id);return;}s.frame++;apF(id,s.frame);rPbUI(id);}
+function apF(id,frame){const np=arr=>arr.map((v,i)=>i<frame?v:null);const c=cMap['ts-'+id+'-c'];if(!c)return;if(id==='appt'){const sl=fA();c.data.datasets[0].data=np(sl.map(d=>d.JM));c.data.datasets[1].data=np(sl.map(d=>d.AM));c.update('active');mkAGrid(sl);}else if(id==='pend'){const P=fP();c.data.datasets[0].data=np(P.map(d=>d.v));c.update('active');mkPGrid(P,frame);}else if(id==='cfh'){const cf=fCFH();c.data.datasets[0].data=np(cf.map(d=>d.total));c.data.datasets[1].data=np(cf.map(d=>d.disp));c.data.datasets[2].data=np(cf.map(d=>d.pend));c.update('active');}else if(id==='cont'){c.data.datasets[0].data=np(S.CONT.map(d=>d.i));c.data.datasets[1].data=np(S.CONT.map(d=>d.d));c.data.datasets[2].data=np(S.CONT.map(d=>d.p));c.update('active');}}
+function rstF(id){const c=cMap['ts-'+id+'-c'];if(!c)return;c.data.datasets.forEach(ds=>ds.data=ds.data.map(()=>null));c.update('none');}
+function rPbUI(id){const s=PB[id];const btn=document.getElementById('pb-'+id+'-btn');const fill=document.getElementById('pb-'+id+'-fill');const step=document.getElementById('pb-'+id+'-step');if(!btn||!s)return;const done=s.frame>=s.max&&!s.playing;btn.className='pb-btn '+(s.playing?'pb-playing':done?'pb-done':'pb-idle');btn.innerHTML=s.playing?'\u23f8 Pause':done?'\u21bb Replay':'\u25b6 Play';const pct=s.max>0?Math.min(100,(s.frame/s.max)*100):0;fill.style.width=pct.toFixed(1)+'%';fill.style.background=s.playing?'#b03030':done?'#2a6e4a':'#2563a8';const srcs={appt:fA(),pend:fP(),cfh:fCFH(),cont:S.CONT};const arr=srcs[id]||[];const lbl=arr[s.frame-1]?.y||arr[s.frame-1]?.p||'';step.textContent=s.frame===0?'- / '+s.max:Math.min(s.frame,s.max)+' / '+s.max+(lbl?' \u00b7 '+lbl:'');}
+function initLegal(){updateLegalYear();}
+function updateLegalYear(){const idx=parseInt(document.getElementById('leg-yr').value);const d=S.WPY[idx];if(!d)return;document.getElementById('leg-tbl-yr-lbl').textContent=WY[idx]||d.p;document.getElementById('leg-stat-grid').innerHTML=[['WPs Filed',d.f,'#0d1b2a'],['WPs Decided',d.d,'#2563a8'],['Upheld',d.u,'#3a8a5a'],['Reversed',d.r,'#b03030'],['Partly Allowed',d.pa,'#c9a84c'],['SLPs Filed',d.slpF,'#1a4a7c'],['SLPs Decided',d.slpD,'#b87333']].map(([l,v,c])=>'<div class="stat" style="border-top-color:'+c+'"><div class="sl">'+l+'</div><div class="sv" style="color:'+c+';font-size:20px">'+v.toLocaleString('en-IN')+'</div></div>').join('');
+  mk('leg-bar',{type:'bar',data:{labels:['WPs Filed','WPs Decided','Upheld','Reversed','Partly Allowed'],datasets:[{label:'Count',data:[d.f,d.d,d.u,d.r,d.pa],backgroundColor:['#0d1b2a','#2563a8','#3a8a5a','#b03030','#c9a84c'],borderRadius:3}]},options:{...bO(),plugins:{...bO().plugins,datalabels:{...DL,display:true,formatter:v=>(v||0).toLocaleString('en-IN')}},scales:{x:{grid:{display:false},ticks:{color:TX,font:{size:9},maxRotation:20}},y:{grid:{color:GR},ticks:{color:TX,font:{size:11},callback:v=>fmtK(v)}}}}});
+  if(cMap['leg-pie'])try{cMap['leg-pie'].destroy();}catch(e){}const pp=document.getElementById('leg-pie');if(pp)cMap['leg-pie']=new Chart(pp,{type:'pie',data:{labels:['Upheld','Reversed','Partly Allowed'],datasets:[{data:[d.u,d.r,d.pa],backgroundColor:['#3a8a5a','#b03030','#c9a84c'],borderWidth:2,borderColor:'#fff',hoverOffset:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11},padding:6,boxWidth:11}},datalabels:{display:true,formatter:(v,ctx)=>{const t=(d.u+d.r+d.pa)||1;return((v/t)*100).toFixed(1)+'%';},color:'#fff',font:{size:11,weight:'bold'}},tooltip:{...TT,callbacks:{label:ctx=>ctx.label+': '+fmt(ctx.raw)}}}}});
+  const tb=document.getElementById('leg-tbl-body');tb.innerHTML='';const bdy=S.BDY[idx];BN.forEach(b=>{const w=bdy?bdy[b]:null;if(!w||(!w.f&&!w.dc))return;const pd=w.f&&w.dc?((w.dc/w.f)*100).toFixed(0)+'%':'N/A';const ur=w.u&&w.dc?((w.u/w.dc)*100).toFixed(1)+'%':'N/A';const uv=w.u&&w.dc?(w.u/w.dc)*100:0;tb.innerHTML+='<tr><td style="font-weight:600">'+b+'</td><td class="r">'+fmt(w.f)+'</td><td class="r">'+fmt(w.dc)+'</td><td class="r">'+pd+'</td><td class="r" style="color:#2a6e4a;font-weight:500">'+fmt(w.u)+'</td><td class="r" style="color:#b03030;font-weight:500">'+fmt(w.r)+'</td><td class="r" style="color:'+(uv>50?'#2a6e4a':'#b03030')+';font-weight:600">'+ur+'</td><td class="r">'+fmt(w.slp)+'</td></tr>';});}
+function gS(){const m=document.getElementById('city-sort').value;if(m==='cont')return [...BN].sort((a,b)=>{const ac=S.CTALL[a]?.find(c=>c.y==='2025');const bc=S.CTALL[b]?.find(c=>c.y==='2025');return(bc?bc.p:0)-(ac?ac.p:0);});return [...BN].sort((a,b)=>(S.C25[b]?.cl||0)-(S.C25[a]?.cl||0));}
+function initAB(){bPendAB();buildAbAging();bWpAB();buildAbCont();}
+function switchAb(id,btn){['pend','aging','wps','cont'].forEach(s=>document.getElementById('ab-'+s).classList.toggle('dn',s!==id));document.querySelectorAll('[data-ab]').forEach(b=>b.classList.toggle('on',b.dataset.ab===id));}
+function switchBs(id,btn){['bov','bcf','bag','blg','bct'].forEach(s=>document.getElementById('bs-'+s).classList.toggle('dn',s!==id));document.querySelectorAll('[data-bs]').forEach(b=>b.classList.toggle('on',b.dataset.bs===id));}
+function updateBench(){const sel=document.getElementById('bench-sel').value;const iA=sel==='ALL';document.getElementById('city-all').classList.toggle('dn',!iA);document.getElementById('city-single').classList.toggle('dn',iA);if(!iA)renderBench(sel);}
+function bPendAB(){const s=gS();mk('ab-pend-c',{type:'bar',data:{labels:s.map(b=>b.replace(' Bench','')),datasets:[{label:'Closing Pendency',data:s.map(b=>S.C25[b]?.cl||0),backgroundColor:s.map((_,i)=>i===0?'#0d1b2a':i<4?'#2563a8':'#3b82c4'),borderRadius:3}]},options:{...bO(),indexAxis:'y',plugins:{...bO().plugins,datalabels:{...DL,display:true,formatter:v=>v.toLocaleString('en-IN')}},scales:{x:{grid:{color:GR},ticks:{color:TX,font:{size:11},callback:v=>fmtK(v)}},y:{grid:{display:false},ticks:{color:TX,font:{size:11}}}}}});}
+function buildAbAging(){const s=gS();const filt=document.getElementById('aging-filter')?.value||'all';let ds;if(filt==='all'){ds=[{label:'>1 Yr',data:s.map(b=>S.AGING[b]?.g1||0),backgroundColor:'#2563a8',borderRadius:0},{label:'>3 Yrs',data:s.map(b=>S.AGING[b]?.g3||0),backgroundColor:'#c9a84c',borderRadius:0},{label:'>5 Yrs',data:s.map(b=>S.AGING[b]?.g5||0),backgroundColor:'#b87333',borderRadius:0},{label:'>10 Yrs',data:s.map(b=>S.AGING[b]?.g10||0),backgroundColor:'#b03030',borderRadius:[2,2,0,0]}];}else{const km={g1:'>1 Year',g3:'>3 Years',g5:'>5 Years',g10:'>10 Years'};const cm={g1:'#2563a8',g3:'#c9a84c',g5:'#b87333',g10:'#b03030'};ds=[{label:km[filt],data:s.map(b=>S.AGING[b]?.[filt]||0),backgroundColor:cm[filt],borderRadius:3}];}mk('ab-aging-c',{type:'bar',data:{labels:s.map(b=>b.replace(' Bench','').slice(0,10)),datasets:ds},options:{...bO(),plugins:{...bO().plugins,datalabels:{...DLsm,display:ctx=>ctx.dataset.data[ctx.dataIndex]>100,formatter:v=>fmtK(v)}},scales:{x:{grid:{display:false},ticks:{color:TX,font:{size:10},maxRotation:35}},y:{grid:{color:GR},ticks:{color:TX,font:{size:11},callback:v=>fmtK(v)}}}}});}
+function bWpAB(){const b4=S.BDY[4];const wb=BN.filter(b=>b4&&b4[b]&&b4[b].f!=null).sort((a,b)=>(b4[b].f||0)-(b4[a].f||0));mk('ab-wp-c',{type:'bar',data:{labels:wb.map(b=>b.replace(' Bench','')),datasets:[{label:'Filed',data:wb.map(b=>b4[b].f||0),backgroundColor:'#1a4a7c',borderRadius:2},{label:'Decided',data:wb.map(b=>b4[b].dc||0),backgroundColor:'#3a8a5a',borderRadius:2},{label:'Reversed',data:wb.map(b=>b4[b].r||0),backgroundColor:'#b03030',borderRadius:2}]},options:{...bO(),plugins:{...bO().plugins,datalabels:{...DLsm,display:ctx=>ctx.dataset.data[ctx.dataIndex]>500,formatter:v=>fmtK(v)}},scales:{x:{grid:{display:false},ticks:{color:TX,font:{size:10},maxRotation:35}},y:{grid:{color:GR},ticks:{color:TX,font:{size:11},callback:v=>fmtK(v)}}}}});
+  const wr=wb.filter(b=>b4[b].u!=null&&b4[b].dc>0).sort((a,b)=>(b4[b].u/b4[b].dc)-(b4[a].u/b4[a].dc));mk('ab-uphold-c',{type:'bar',data:{labels:wr.map(b=>b.replace(' Bench','')),datasets:[{label:'Uphold Rate %',data:wr.map(b=>+((b4[b].u/b4[b].dc)*100).toFixed(1)),backgroundColor:wr.map(b=>{const r=(b4[b].u/b4[b].dc)*100;return r>=60?'#2a6e4a':r>=40?'#c9a84c':'#b03030';}),borderRadius:3}]},options:{...bO(),plugins:{...bO().plugins,datalabels:{...DL,display:true,formatter:v=>v.toFixed(1)+'%'}},scales:{x:{grid:{display:false},ticks:{color:TX,font:{size:10},maxRotation:35}},y:{grid:{color:GR},ticks:{color:TX,font:{size:11},callback:v=>v+'%'},max:100}}}});}
+function buildAbCont(){const yr=document.getElementById('ab-cont-yr').value;const s=gS();const gv=(b,k)=>{const r=S.CTALL[b]?.find(c=>c.y===yr);return r?r[k]:0;};mk('ab-cont-c',{type:'bar',data:{labels:s.map(b=>b.replace(' Bench','').slice(0,10)),datasets:[{label:'Instituted',data:s.map(b=>gv(b,'i')),backgroundColor:'#2563a8',borderRadius:2},{label:'Disposed',data:s.map(b=>gv(b,'d')),backgroundColor:'#3a8a5a',borderRadius:2},{label:'Pending',data:s.map(b=>gv(b,'p')),backgroundColor:'#b03030',borderRadius:2}]},options:{...bO(),plugins:{...bO().plugins,datalabels:{...DLsm,display:ctx=>ctx.dataset.data[ctx.dataIndex]>5,formatter:v=>v.toLocaleString('en-IN')}},scales:{x:{grid:{display:false},ticks:{color:TX,font:{size:10},maxRotation:35}},y:{grid:{color:GR},ticks:{color:TX,font:{size:11}}}}}});}
+function renderBench(bn){const c25=S.C25[bn]||{};const m=S.MEMB[bn]||{};const ag=S.AGING[bn]||{};const ct=S.CTALL[bn]||[];const b4=S.BDY[4]||{};const w=b4[bn]||{};const hV=(m.av||0)>0||(m.jv||0)>0;
+  document.getElementById('bench-hdr').innerHTML='<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:9px"><div><div style="font-size:9px;letter-spacing:2px;color:var(--gold);text-transform:uppercase;margin-bottom:2px">Individual Bench</div><div style="font-size:17px;font-weight:700;color:#fff;font-family:\'Playfair Display\',serif">'+bn+'</div><div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:1px">'+(m.city||'')+'</div>'+(hV?'<div style="margin-top:5px;display:inline-block;padding:3px 8px;background:rgba(176,48,48,.35);border-radius:6px;font-size:10px;color:#fca5a5">\u26a0 '+(m.vn||'Vacancy')+'</div>':'')+'</div><div style="display:flex;gap:6px;flex-wrap:wrap">'+[['Sanctioned',m.s||'-'],['AM filled',(m.af||0)+'/'+(( m.af||0)+(m.av||0))],['JM filled',(m.jf||0)+'/'+(( m.jf||0)+(m.jv||0))],['Dec 2025 pending',(c25.cl||0).toLocaleString('en-IN')]].map(([l,v])=>'<div style="text-align:center;padding:5px 9px;background:rgba(255,255,255,.08);border-radius:7px"><div style="font-size:9px;color:rgba(255,255,255,.4);letter-spacing:1px;margin-bottom:1px;text-transform:uppercase">'+l+'</div><div style="font-size:14px;font-weight:600;color:var(--gold)">'+v+'</div></div>').join('')+'</div></div>';
+  switchBs('bov');document.querySelectorAll('[data-bs]').forEach(b=>b.classList.toggle('on',b.dataset.bs==='bov'));
+  document.getElementById('bs-bov').innerHTML=hBov(bn,m,c25);document.getElementById('bs-bcf').innerHTML=hBcf(bn,c25);document.getElementById('bs-bag').innerHTML=hBag(bn,ag);document.getElementById('bs-blg').innerHTML=hBlg(bn,w);document.getElementById('bs-bct').innerHTML=hBct(bn,ct);
+  setTimeout(()=>rBCharts(bn,c25,ag,w,ct),60);}
+function hBov(bn,m,c25){return '<div class="row2"><div class="card-sm"><div style="font-size:12px;font-weight:600;color:var(--navy);margin-bottom:9px">Membership</div>'+[['Sanctioned strength',m.s||0,false],['AM filled',m.af||0,false],['AM vacant',m.av||0,(m.av||0)>0],['JM filled',m.jf||0,false],['JM vacant',m.jv||0,(m.jv||0)>0]].map(([k,v,w])=>'<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:.5px solid var(--light)"><span style="color:var(--mid);font-size:11px">'+k+'</span><span style="font-weight:600;color:'+(w?'#b03030':'var(--navy)')+';font-size:12px">'+v+'</span></div>').join('')+(m.infra?'<div class="info-card" style="margin-top:9px;border-top:3px solid var(--gold)"><div style="font-size:10px;color:var(--mid);margin-bottom:3px">Premises ('+m.infra.pay+')</div><div style="font-size:11px;color:var(--navy);margin-bottom:5px">'+m.infra.type+'</div><div style="font-size:19px;font-weight:700;color:var(--blue)">\u20b9 '+m.infra.cost.toLocaleString('en-IN')+'</div><div style="font-size:11px;color:var(--mid)">per month</div></div>':'')+'</div><div class="card-sm"><div style="font-size:12px;font-weight:600;color:var(--navy);margin-bottom:9px">December 2025 snapshot</div>'+[['Opening',c25.o,'var(--navy)'],['Instituted',c25.i,'#2563a8'],['Total for disposal',c25.t,'#1a4a7c'],['Disposed',c25.d,'#3a8a5a'],['Closing balance',c25.cl,'#b03030']].map(([k,v,c])=>'<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:.5px solid var(--light)"><span style="color:var(--mid);font-size:11px">'+k+'</span><span style="font-weight:600;color:'+c+';font-size:12px">'+fmt(v)+'</span></div>').join('')+'</div></div>';}
+function hBcf(bn,c25){return '<div class="card"><div style="font-size:13px;font-weight:600;color:var(--navy);margin-bottom:11px">Case flow \u2014 '+bn+', December 2025</div><div class="ch" style="height:260px"><canvas id="bs-cf-c"></canvas></div><div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:11px">'+[['Opening',c25.o,'#0d1b2a'],['Instituted',c25.i,'#2563a8'],['Total',c25.t,'#1a4a7c'],['Disposed',c25.d,'#3a8a5a'],['Closing',c25.cl,'#b03030']].map(([l,v,c])=>'<div style="text-align:center;padding:8px 4px;background:var(--cream);border-radius:7px;border-top:3px solid '+c+'"><div style="font-size:9px;color:var(--mid);margin-bottom:2px">'+l+'</div><div style="font-size:13px;font-weight:600;color:'+c+'">'+fmt(v)+'</div></div>').join('')+'</div></div>';}
+function hBag(bn,ag){const tot=ag.g1||1;return '<div class="row2"><div class="card"><div style="font-size:12px;font-weight:600;color:var(--navy);margin-bottom:9px">Case aging \u2014 '+bn+'</div>'+[['> 1 year',ag.g1,'#2563a8'],['> 3 years',ag.g3,'#c9a84c'],['> 5 years',ag.g5,'#b87333'],['> 10 years',ag.g10,'#b03030']].map(([k,v,c])=>'<div class="pbar-wrap"><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px"><span style="color:var(--mid)">'+k+'</span><div><span style="font-weight:600;color:'+c+'">'+fmt(v||0)+'</span> <span style="color:var(--mid);font-size:10px">('+((( v||0)/tot)*100).toFixed(1)+'%)</span></div></div><div class="pbar-track"><div class="pbar-fill" style="width:'+Math.min(100,((v||0)/tot)*100)+'%;background:'+c+'"></div></div></div>').join('')+'</div><div class="card"><div style="font-size:12px;font-weight:600;color:var(--navy);margin-bottom:7px">Aging distribution</div><div class="ch" style="height:240px"><canvas id="bs-ag-c"></canvas></div></div></div>';}
+function hBlg(bn,w){if(!w.f&&!w.dc)return '<div class="card" style="text-align:center;padding:26px"><div style="font-size:13px;color:var(--mid)">WP/SLP bench-wise data not available for '+bn+' in RTI enclosures.</div></div>';const ur=w.u&&w.dc?((w.u/w.dc)*100).toFixed(1)+'%':'N/A';const uv=w.u&&w.dc?(w.u/w.dc)*100:0;return '<div class="row2"><div class="card-sm"><div style="font-size:12px;font-weight:600;color:var(--navy);margin-bottom:9px">WP/SLP statistics (Dec 2024, cumulative since 1998)</div>'+[['WPs filed',w.f],['WPs decided',w.dc],['CAT orders upheld',w.u],['CAT orders reversed',w.r],['Partly allowed',w.pa],['SLPs filed (SC)',w.slp]].map(([k,v])=>'<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:.5px solid var(--light)"><span style="color:var(--mid);font-size:11px">'+k+'</span><span style="font-weight:600;font-size:12px">'+fmt(v)+'</span></div>').join('')+'<div style="margin-top:9px;padding:8px;background:var(--cream);border-radius:7px;text-align:center"><div style="font-size:9px;color:var(--mid);text-transform:uppercase;letter-spacing:1px">Uphold Rate</div><div style="font-size:20px;font-weight:700;color:'+(uv>50?'#2a6e4a':'#b03030')+'">'+ur+'</div></div></div><div class="card-sm"><div style="font-size:12px;font-weight:600;color:var(--navy);margin-bottom:5px">WP outcome distribution</div><div class="leg"><span><span class="ld" style="background:var(--green2)"></span>Upheld</span><span><span class="ld" style="background:#b03030"></span>Reversed</span><span><span class="ld" style="background:var(--gold)"></span>Partly</span></div><div class="ch" style="height:210px"><canvas id="bs-wp-pie"></canvas></div></div></div>';}
+function hBct(bn,ct){return '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:9px"><div><div style="font-size:13px;font-weight:600;color:var(--navy)">Contempt trend \u2014 '+bn+'</div></div><select id="bct-yr-sel" onchange="rBct(\''+bn+'\')" style="padding:5px 8px;font-size:12px"><option value="all" selected>All years</option>'+['2021','2022','2023','2024','2025'].map(y=>'<option value="'+y+'">'+y+'</option>').join('')+'</select></div><div class="leg"><span><span class="ld" style="background:var(--blue)"></span>Instituted</span><span><span class="ld" style="background:var(--green2)"></span>Disposed</span><span><span class="ld" style="background:#b03030"></span>Pending</span></div><div class="ch" style="height:260px"><canvas id="bs-ct-c"></canvas></div></div>';}
+function rBct(bn){const ct=S.CTALL[bn]||[];const sel=document.getElementById('bct-yr-sel')?.value||'all';const rows=sel==='all'?ct:ct.filter(c=>c.y===sel);mk('bs-ct-c',{type:'bar',data:{labels:rows.map(c=>c.y),datasets:[{label:'Instituted',data:rows.map(c=>c.i),backgroundColor:'#2563a8',borderRadius:3},{label:'Disposed',data:rows.map(c=>c.d),backgroundColor:'#3a8a5a',borderRadius:3},{label:'Pending',data:rows.map(c=>c.p),backgroundColor:'#b03030',borderRadius:3}]},options:{...bO(),plugins:{...bO().plugins,datalabels:{...DL,display:true,formatter:v=>v.toLocaleString('en-IN')}},spaces:{x:{grid:{color:GR},ticks:{color:TX,font:{size:12}}},y:{beginAtZero:true,grid:{color:GR},ticks:{color:TX,font:{size:12}}}},scales:{x:{grid:{color:GR},ticks:{color:TX,font:{size:12}}},y:{beginAtZero:true,grid:{color:GR},ticks:{color:TX,font:{size:12}}}}}});}
+function rBCharts(bn,c25,ag,w,ct){
+  mk('bs-cf-c',{type:'bar',data:{labels:['Opening','Instituted','Total','Disposed','Closing'],datasets:[{label:'Cases',data:[c25.o,c25.i,c25.t,c25.d,c25.cl],backgroundColor:['#0d1b2a','#2563a8','#1a4a7c','#3a8a5a','#b03030'],borderRadius:4}]},options:{...bO(),plugins:{...bO().plugins,datalabels:{...DL,display:true,formatter:v=>v.toLocaleString('en-IN')}},scales:{x:{grid:{display:false},ticks:{color:TX,font:{size:11}}},y:{grid:{color:GR},ticks:{color:TX,font:{size:11},callback:v=>v.toLocaleString('en-IN')}}}}});
+  mk('bs-ag-c',{type:'doughnut',data:{labels:['>1 yr','>3 yrs','>5 yrs','>10 yrs'],datasets:[{data:[ag.g1||0,ag.g3||0,ag.g5||0,ag.g10||0],backgroundColor:['#2563a8','#c9a84c','#b87333','#b03030'],borderWidth:2,borderColor:'#fff',hoverOffset:4}]},options:{responsive:true,maintainAspectRatio:false,cutout:'50%',plugins:{legend:{position:'bottom',labels:{font:{size:11},padding:6,boxWidth:11}},datalabels:{display:true,formatter:(v,ctx)=>{const s=ag.g1||1;return v>0?((v/s)*100).toFixed(0)+'%':'';},color:'#fff',font:{size:10,weight:'bold'}},tooltip:{...TT,callbacks:{label:ctx=>ctx.label+': '+fmt(ctx.raw)}}}}});
+  rBct(bn);
+  if(w.f&&w.u!=null){if(cMap['bs-wp-pie'])try{cMap['bs-wp-pie'].destroy();}catch(e){}const pp=document.getElementById('bs-wp-pie');if(pp)cMap['bs-wp-pie']=new Chart(pp,{type:'pie',data:{labels:['Upheld','Reversed','Partly'],datasets:[{data:[w.u||0,w.r||0,w.pa||0],backgroundColor:['#3a8a5a','#b03030','#c9a84c'],borderWidth:2,borderColor:'#fff',hoverOffset:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},datalabels:{display:true,formatter:(v,ctx)=>{const t=(w.u||0)+(w.r||0)+(w.pa||0);return t>0?((v/t)*100).toFixed(1)+'%':'';},color:'#fff',font:{size:11,weight:'bold'}},tooltip:{...TT,callbacks:{label:ctx=>ctx.label+': '+fmt(ctx.raw)}}}}});}}
+function openEdit(){document.getElementById('edit-drawer').classList.add('open');document.getElementById('overlay').classList.add('show');rebuildEP();}
+function closeEdit(){document.getElementById('edit-drawer').classList.remove('open');document.getElementById('overlay').classList.remove('show');}
+function showSaved(){const b=document.getElementById('saved-badge');b.classList.add('show');setTimeout(()=>b.classList.remove('show'),2200);}
+function switchET(id,btn){document.querySelectorAll('.edit-tab').forEach(t=>t.classList.remove('on'));btn.classList.add('on');['appt','cfh','wpy','wbench','cont','ctall','aging','bench','memb'].forEach(t=>document.getElementById('etab-'+t).classList.toggle('dn',t!==id));}
+function rebuildEP(){eAppt();eCfh();eWpy();eWbench();eCont();eCtall();eAging();eBench();eMemb();}
+const inp=(v,w)=>'<input type="number" value="'+(v!=null?v:'')+'" style="width:'+(w||55)+'px" min="0">';
+const inpT=(v,w)=>'<input type="text" value="'+(v||'')+'" style="width:'+(w||75)+'px">';
+function eAppt(){const el=document.getElementById('etab-appt');el.innerHTML='<div class="edit-section"><div class="edit-section-title">Member Appointments (RTI Point No. 10)</div><table class="edit-tbl"><thead><tr><th>Year</th><th>Judicial Members</th><th>Admin. Members</th></tr></thead><tbody id="ea-body"></tbody></table><div class="edit-actions"><button class="btn btn-navy" onclick="svAppt()">Save</button><button class="btn btn-gold" onclick="addA()">+ Add Year</button><button class="btn btn-red" onclick="resetDef()">Reset All to Defaults</button></div></div>';rEA();}
+function rEA(){const tb=document.getElementById('ea-body');if(!tb)return;tb.innerHTML=S.APPT.map(d=>'<tr><td>'+inpT(d.y,50)+'</td><td>'+inp(d.JM,60)+'</td><td>'+inp(d.AM,60)+'</td></tr>').join('');}
+function addA(){const last=S.APPT[S.APPT.length-1];S.APPT.push({y:String(parseInt(last?.y||2025)+1),JM:0,AM:0});rEA();}
+function svAppt(){const rows=document.querySelectorAll('#ea-body tr');S.APPT=Array.from(rows).map(r=>{const i=r.querySelectorAll('input');return{y:i[0].value.trim(),JM:parseInt(i[1].value)||0,AM:parseInt(i[2].value)||0};});saveS();refreshAll();}
+function eCfh(){const el=document.getElementById('etab-cfh');el.innerHTML='<div class="edit-section"><div class="edit-section-title">Case Flow History &mdash; December totals</div><div style="overflow-x:auto"><table class="edit-tbl"><thead><tr><th>Period</th><th>Total for Disposal</th><th>Cases Disposed</th><th>Closing Pendency</th></tr></thead><tbody id="ec-body"></tbody></table></div><div class="edit-actions"><button class="btn btn-navy" onclick="svCfh()">Save</button><button class="btn btn-gold" onclick="addC()">+ Add Period</button></div><div style="font-size:10px;color:var(--mid);margin-top:6px">Closing Pendency also drives the Pendency Trend chart.</div></div>';rEC();}
+function rEC(){const tb=document.getElementById('ec-body');if(!tb)return;tb.innerHTML=S.CFH.map(d=>'<tr><td>'+inpT(d.p,72)+'</td><td>'+inp(d.total,70)+'</td><td>'+inp(d.disp,70)+'</td><td>'+inp(d.pend,70)+'</td></tr>').join('');}
+function addC(){const last=S.CFH[S.CFH.length-1];const yr=parseInt((last?.p||'Dec 2025').split(' ')[1]);S.CFH.push({p:'Dec '+(yr+1),total:0,disp:0,pend:0});rEC();}
+function svCfh(){const rows=document.querySelectorAll('#ec-body tr');S.CFH=Array.from(rows).map(r=>{const i=r.querySelectorAll('input');return{p:i[0].value.trim(),total:parseInt(i[1].value)||0,disp:parseInt(i[2].value)||0,pend:parseInt(i[3].value)||0};});saveS();refreshAll();}
+function eWpy(){const el=document.getElementById('etab-wpy');el.innerHTML='<div class="edit-section"><div class="edit-section-title">WP / SLP Yearly Summary (cumulative since 1998)</div><div style="overflow-x:auto"><table class="edit-tbl"><thead><tr><th>Period</th><th>WPs Filed</th><th>WPs Decided</th><th>Upheld</th><th>Reversed</th><th>Partly</th><th>SLPs Filed</th><th>SLPs Decided</th></tr></thead><tbody id="ew-body"></tbody></table></div><div class="edit-actions"><button class="btn btn-navy" onclick="svWpy()">Save</button><button class="btn btn-gold" onclick="addW()">+ Add Year</button></div></div>';rEW();}
+function rEW(){const tb=document.getElementById('ew-body');if(!tb)return;tb.innerHTML=S.WPY.map(d=>'<tr><td>'+inpT(d.p,68)+'</td><td>'+inp(d.f,58)+'</td><td>'+inp(d.d,58)+'</td><td>'+inp(d.u,58)+'</td><td>'+inp(d.r,58)+'</td><td>'+inp(d.pa,58)+'</td><td>'+inp(d.slpF,55)+'</td><td>'+inp(d.slpD,55)+'</td></tr>').join('');}
+function addW(){const last=S.WPY[S.WPY.length-1];const yr=parseInt((last?.p||'Dec 2024').split(' ')[1]);S.WPY.push({p:'Dec '+(yr+1),f:0,d:0,u:0,r:0,pa:0,slpF:0,slpD:0});rEW();}
+function svWpy(){const rows=document.querySelectorAll('#ew-body tr');S.WPY=Array.from(rows).map(r=>{const i=r.querySelectorAll('input');return{p:i[0].value.trim(),f:parseInt(i[1].value)||0,d:parseInt(i[2].value)||0,u:parseInt(i[3].value)||0,r:parseInt(i[4].value)||0,pa:parseInt(i[5].value)||0,slpF:parseInt(i[6].value)||0,slpD:parseInt(i[7].value)||0};});saveS();refreshAll();}
+function eWbench(){const el=document.getElementById('etab-wbench');el.innerHTML='<div class="edit-section"><div class="edit-section-title">WP / SLP Bench-wise (select year + bench)</div><div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap"><select id="ewb-yr" onchange="rEWB()" style="padding:5px 8px;font-size:12px"><option value="0">Dec 2020</option><option value="1">Dec 2021</option><option value="2">Dec 2022</option><option value="3">Dec 2023</option><option value="4" selected>Dec 2024</option></select><select id="ewb-bn" onchange="rEWB()" style="padding:5px 8px;font-size:12px">'+BN.map(b=>'<option value="'+b+'">'+b+'</option>').join('')+'</select></div><div id="ewb-form"></div></div>';}
+function rEWB(){const idx=parseInt(document.getElementById('ewb-yr').value);const bn=document.getElementById('ewb-bn').value;const w=(S.BDY[idx]&&S.BDY[idx][bn])||{};document.getElementById('ewb-form').innerHTML='<table class="edit-tbl"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>'+[['WPs Filed (f)',w.f],['WPs Decided (dc)',w.dc],['Upheld (u)',w.u],['Reversed (r)',w.r],['Partly Allowed (pa)',w.pa],['SLPs Filed (slp)',w.slp]].map(([k,v])=>'<tr><td style="color:var(--mid);font-size:11px">'+k+'</td><td>'+inp(v,70)+'</td></tr>').join('')+'</tbody></table><div class="edit-actions" style="margin-top:8px"><button class="btn btn-navy" onclick="svWB()">Save</button></div>';}
+function svWB(){const idx=parseInt(document.getElementById('ewb-yr').value);const bn=document.getElementById('ewb-bn').value;if(!S.BDY[idx])S.BDY[idx]={};if(!S.BDY[idx][bn])S.BDY[idx][bn]={};const rows=document.querySelectorAll('#ewb-form tbody tr');const keys=['f','dc','u','r','pa','slp'];rows.forEach((r,i)=>{const v=r.querySelector('input').value.trim();S.BDY[idx][bn][keys[i]]=v===''?null:parseInt(v)||0;});saveS();refreshAll();}
+function eCont(){const el=document.getElementById('etab-cont');el.innerHTML='<div class="edit-section"><div class="edit-section-title">Contempt Petitions &mdash; Principal Bench</div><table class="edit-tbl"><thead><tr><th>Year</th><th>Instituted</th><th>Disposed</th><th>Pending</th></tr></thead><tbody id="ect-body"></tbody></table><div class="edit-actions"><button class="btn btn-navy" onclick="svCont()">Save</button><button class="btn btn-gold" onclick="addCt()">+ Add Year</button></div></div>';rECt();}
+function rECt(){const tb=document.getElementById('ect-body');if(!tb)return;tb.innerHTML=S.CONT.map(d=>'<tr><td>'+inpT(d.y,50)+'</td><td>'+inp(d.i,60)+'</td><td>'+inp(d.d,60)+'</td><td>'+inp(d.p,60)+'</td></tr>').join('');}
+function addCt(){const last=S.CONT[S.CONT.length-1];S.CONT.push({y:String(parseInt(last?.y||2025)+1),i:0,d:0,p:0});rECt();}
+function svCont(){const rows=document.querySelectorAll('#ect-body tr');S.CONT=Array.from(rows).map(r=>{const i=r.querySelectorAll('input');return{y:i[0].value.trim(),i:parseInt(i[1].value)||0,d:parseInt(i[2].value)||0,p:parseInt(i[3].value)||0};});saveS();refreshAll();}
+function eCtall(){const el=document.getElementById('etab-ctall');el.innerHTML='<div class="edit-section"><div class="edit-section-title">Contempt Petitions &mdash; All Benches</div><select id="ectb-bn" onchange="rECtAll()" style="padding:5px 8px;font-size:12px;width:100%;margin-bottom:10px">'+BN.map(b=>'<option value="'+b+'">'+b+'</option>').join('')+'</select><div id="ectb-form"></div></div>';}
+function rECtAll(){const bn=document.getElementById('ectb-bn').value;const ct=S.CTALL[bn]||[];document.getElementById('ectb-form').innerHTML='<table class="edit-tbl"><thead><tr><th>Year</th><th>Instituted</th><th>Disposed</th><th>Pending</th></tr></thead><tbody>'+ct.map(d=>'<tr><td>'+inpT(d.y,48)+'</td><td>'+inp(d.i,56)+'</td><td>'+inp(d.d,56)+'</td><td>'+inp(d.p,56)+'</td></tr>').join('')+'</tbody></table><div class="edit-actions" style="margin-top:8px"><button class="btn btn-navy" onclick="svCtAll(\''+bn+'\')">Save '+bn+'</button><button class="btn btn-gold" onclick="addCtAll(\''+bn+'\')">+ Add Year</button></div>';}
+function addCtAll(bn){if(!S.CTALL[bn])S.CTALL[bn]=[];const last=S.CTALL[bn][S.CTALL[bn].length-1];S.CTALL[bn].push({y:String(parseInt(last?.y||2025)+1),i:0,d:0,p:0});rECtAll();}
+function svCtAll(bn){const rows=document.querySelectorAll('#ectb-form tbody tr');S.CTALL[bn]=Array.from(rows).map(r=>{const i=r.querySelectorAll('input');return{y:i[0].value.trim(),i:parseInt(i[1].value)||0,d:parseInt(i[2].value)||0,p:parseInt(i[3].value)||0};});saveS();refreshAll();}
+function eAging(){const el=document.getElementById('etab-aging');el.innerHTML='<div class="edit-section"><div class="edit-section-title">Case Aging &mdash; All Benches (Page 16 of RTI)</div><div style="overflow-x:auto"><table class="edit-tbl"><thead><tr><th>Bench</th><th>&gt;1 Year</th><th>&gt;3 Years</th><th>&gt;5 Years</th><th>&gt;10 Years</th></tr></thead><tbody>'+BN.map(b=>{const ag=S.AGING[b]||{};return'<tr><td style="color:var(--mid);font-size:11px;white-space:nowrap">'+b+'</td><td>'+inp(ag.g1,58)+'</td><td>'+inp(ag.g3,58)+'</td><td>'+inp(ag.g5,58)+'</td><td>'+inp(ag.g10,58)+'</td></tr>';}).join('')+'</tbody></table></div><div class="edit-actions" style="margin-top:8px"><button class="btn btn-navy" onclick="svAging()">Save All</button></div></div>';}
+function svAging(){const rows=document.querySelectorAll('#etab-aging tbody tr');rows.forEach(r=>{const cells=r.querySelectorAll('td');const bn=cells[0].textContent.trim();const ins=r.querySelectorAll('input');if(bn&&S.AGING[bn]!==undefined)S.AGING[bn]={g1:parseInt(ins[0].value)||0,g3:parseInt(ins[1].value)||0,g5:parseInt(ins[2].value)||0,g10:parseInt(ins[3].value)||0};});saveS();refreshAll();}
+function eBench(){const el=document.getElementById('etab-bench');el.innerHTML='<div class="edit-section"><div class="edit-section-title">Bench December 2025 Case Flow</div><select id="eb-bn" onchange="rEB()" style="padding:5px 8px;font-size:12px;width:100%;margin-bottom:10px">'+BN.map(b=>'<option value="'+b+'">'+b+'</option>').join('')+'</select><div id="eb-form"></div></div>';}
+function rEB(){const bn=document.getElementById('eb-bn').value;const c25=S.C25[bn]||{};document.getElementById('eb-form').innerHTML='<table class="edit-tbl"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>'+[['Opening (o)',c25.o],['Instituted (i)',c25.i],['Total for disposal (t)',c25.t],['Disposed (d)',c25.d],['Closing (cl)',c25.cl]].map(([k,v])=>'<tr><td style="color:var(--mid);font-size:11px">'+k+'</td><td>'+inp(v,70)+'</td></tr>').join('')+'</tbody></table><div class="edit-actions" style="margin-top:8px"><button class="btn btn-navy" onclick="svEB(\''+bn+'\')">Save '+bn+'</button></div>';}
+function svEB(bn){const rows=document.querySelectorAll('#eb-form tbody tr');if(!S.C25[bn])S.C25[bn]={};const keys=['o','i','t','d','cl'];rows.forEach((r,i)=>{S.C25[bn][keys[i]]=parseInt(r.querySelector('input').value)||0;});saveS();refreshAll();}
+function eMemb(){const el=document.getElementById('etab-memb');el.innerHTML='<div class="edit-section"><div class="edit-section-title">Membership &mdash; All Benches</div><select id="em-bn" onchange="rEM()" style="padding:5px 8px;font-size:12px;width:100%;margin-bottom:10px">'+BN.map(b=>'<option value="'+b+'">'+b+'</option>').join('')+'</select><div id="em-form"></div></div>';}
+function rEM(){const bn=document.getElementById('em-bn').value;const m=S.MEMB[bn]||{};document.getElementById('em-form').innerHTML='<table class="edit-tbl"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>'+[['Sanctioned strength (s)',m.s],['AM Filled (af)',m.af],['AM Vacant (av)',m.av],['JM Filled (jf)',m.jf],['JM Vacant (jv)',m.jv]].map(([k,v])=>'<tr><td style="color:var(--mid);font-size:11px">'+k+'</td><td>'+inp(v,60)+'</td></tr>').join('')+'</tbody></table><div class="edit-actions" style="margin-top:8px"><button class="btn btn-navy" onclick="svEM(\''+bn+'\')">Save '+bn+'</button></div>';}
+function svEM(bn){const rows=document.querySelectorAll('#em-form tbody tr');if(!S.MEMB[bn])S.MEMB[bn]={};const keys=['s','af','av','jf','jv'];rows.forEach((r,i)=>{S.MEMB[bn][keys[i]]=parseInt(r.querySelector('input').value)||0;});saveS();refreshAll();}
+</script>
+
+</body></html>
